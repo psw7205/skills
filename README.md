@@ -11,6 +11,7 @@
 | `trace-change-why` | 코드 변경의 WHY(원인, 동기, 판단 근거)를 세션 트랜스크립트에서 추적 | "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
 | `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
+| `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
 
 ## 설치
 
@@ -50,7 +51,12 @@ custom-skills/
 │   │   ├── SKILL.md
 │   │   └── references/guide.md
 │   ├── trace-change-why/SKILL.md
-│   └── session-history/SKILL.md
+│   ├── session-history/SKILL.md
+│   └── video-subtitle-dl/
+│       ├── SKILL.md
+│       └── references/
+│           ├── yt-dlp-options.md
+│           └── translation-guide.md
 ├── docs/                  # 참고 자료
 ├── AGENTS.md              # 레포 가이드라인
 └── README.md

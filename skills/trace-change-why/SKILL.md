@@ -1,10 +1,12 @@
 ---
 name: trace-change-why
 description: >
-  Use when the user asks WHY code changed rather than WHAT changed,
-  including prompts like "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?", "왜 수정한거야?",
-  "이거 왜 바뀐거야?", "who changed this and why", "what was the reasoning behind this change",
-  or questions about the reasoning behind a diff, commit, or staged change.
+  코드 변경의 WHY(원인, 동기, 판단 근거)를 추적하는 스킬.
+  세션 트랜스크립트, git blame, 커밋 히스토리에서 변경 의도를 찾아낸다.
+  "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?", "왜 수정한거야?",
+  "이거 왜 바뀐거야?", "이 커밋 의도가 뭐야?", "누가 왜 바꿨어?",
+  "이 diff 왜 생긴거야?", "이 코드 왜 이렇게 된거야?"
+  등 변경 의도를 묻는 질문에서 트리거.
 ---
 
 # Trace Change Why

@@ -1,9 +1,10 @@
 ---
 name: session-history
 description: >
-  Use when the user is wrapping up work or asks to save session notes, history, or handoff notes,
-  including prompts like "세션 정리해줘", "오늘은 여기까지", "마무리", "save session history",
-  "write handoff notes", or after completing a significant unit of work and signaling closure.
+  세션 대화를 요약하여 의사결정 근거 중심의 히스토리 파일로 저장하는 스킬.
+  "세션 정리해줘", "오늘은 여기까지", "마무리", "끝", "세션 히스토리 저장",
+  "핸드오프 노트 작성해줘", "작업 내역 정리", "오늘 작업 기록해줘"
+  등의 요청이나, 큰 작업 단위를 끝내고 종료 신호를 보낼 때 트리거.
 ---
 
 # Session History

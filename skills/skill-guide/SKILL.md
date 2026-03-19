@@ -3,7 +3,8 @@ name: skill-guide
 description: >
   이 레포에서 새 스킬을 작성하거나 기존 스킬을 수정할 때 사용하는 가이드.
   "스킬 만들어줘", "새 skill 추가", "SKILL.md 작성", "스킬 구조",
-  "create a skill", "add new skill" 등의 요청에서 트리거.
+  "스킬 수정해줘", "스킬 가이드", "description 다듬기",
+  "frontmatter 작성", "스킬 검증" 등의 요청에서 트리거.
   스킬 스펙(frontmatter, description, Progressive Disclosure),
   디렉토리 구조 패턴, 작성 원칙을 제공한다.
 ---
