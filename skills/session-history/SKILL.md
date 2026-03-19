@@ -3,8 +3,11 @@ name: session-history
 description: >
   세션 대화를 요약하여 의사결정 근거 중심의 히스토리 파일로 저장하는 스킬.
   "세션 정리해줘", "오늘은 여기까지", "마무리", "끝", "세션 히스토리 저장",
-  "핸드오프 노트 작성해줘", "작업 내역 정리", "오늘 작업 기록해줘"
+  "핸드오프 노트 작성해줘", "작업 내역 정리", "오늘 작업 기록해줘",
+  "done", "LGTM 여기까지", "좋아 마무리", "다음에 이어서",
+  "save session", "wrap up", "세션 저장"
   등의 요청이나, 큰 작업 단위를 끝내고 종료 신호를 보낼 때 트리거.
+  설계 논의만 한 세션에서도 의사결정 기록이 있으면 트리거.
 ---
 
 # Session History
@@ -36,7 +39,7 @@ description: >
 
 ## 경로 규칙
 
-- **project_name**: `basename $PWD` (현재 작업 디렉토리 이름)
+- **project_name**: `basename $(realpath $PWD)` (symlink를 해소한 실제 디렉토리 이름)
 - **저장 경로**: `~/history/{YYYY-MM-DD}/{project_name}/{HH-mm}-{summary-slug}.md`
 - **summary-slug**: 대화 핵심을 영문 kebab-case로 2-4단어 (예: `auth-middleware-decision`, `api-refactor-feedback`)
 - 디렉토리가 없으면 `mkdir -p`로 생성
@@ -82,12 +85,40 @@ description: >
 
 "주요 결정"과 "피드백"이 상위에 있는 것은 의도적이다. 이 스킬의 목적이 "왜" 중심 기록이므로, 결정과 근거가 가장 먼저 눈에 들어와야 한다. 작업 내역과 변경 사항은 부차적 맥락이다.
 
+## Gotchas
+
+- 종료 신호 없이 트리거하면 대화가 아직 진행 중이라 기록이 불완전해진다. "언제 사용하는가" 조건을 반드시 확인.
+- 동일 세션에서 두 번 저장하면 같은 slug가 생길 수 있다. 파일 존재 여부를 먼저 체크하고, 존재하면 slug에 `-2` 접미사 추가.
+- 30줄 제한을 지키려다 주요 결정이 잘려나가면 본말전도. "주요 결정"과 "피드백" 섹션은 반드시 보존하고, "작업 내역"과 "변경 사항"에서 줄인다.
+- `basename $PWD`가 symlink를 따르면 실제 디렉토리명과 다를 수 있다. `basename $(realpath $PWD)`가 더 안전.
+- 코드 변경 없이 설계 논의만 한 세션도 기록 가치가 있다. "기록할 내용이 존재" 조건의 두 번째 항목(설계 결정/아키텍처 논의)을 놓치지 말 것.
+
 ## 실행 절차
 
 1. 현재 시각을 가져온다: `date +%Y-%m-%d` (디렉토리용), `date +%H-%M` (파일명용), `date +"%Y-%m-%d %H:%M"` (제목용)
-2. project_name을 결정한다: `basename $PWD`
+2. project_name을 결정한다: `basename $(realpath $PWD)`
 3. 대화 내용을 위 원칙과 포맷에 따라 요약한다
 4. summary-slug를 생성한다 (대화 핵심을 영문 kebab-case 2-4단어)
 5. `mkdir -p ~/history/{YYYY-MM-DD}/{project_name}/`
 6. Write 도구로 파일을 저장한다
-7. 저장 경로를 사용자에게 알려준다
+7. 이력 인덱스를 업데이트한다 (아래 "이력 관리" 참조)
+8. 저장 경로를 사용자에게 알려준다
+
+## 이력 관리 (Memory)
+
+저장할 때마다 `~/history/index.jsonl`에 한 줄 추가한다. 이전 기록을 참조하여 중복 방지 및 연속 작업 컨텍스트를 제공한다.
+
+```bash
+# 인덱스 파일 초기화 (없을 때만)
+touch ~/history/index.jsonl
+```
+
+저장 직후 아래 형식으로 한 줄 append:
+```jsonl
+{"date":"2026-03-19","time":"14:30","project":"custom-skills","slug":"auth-middleware-decision","path":"~/history/2026-03-19/custom-skills/14-30-auth-middleware-decision.md"}
+```
+
+**이전 기록 활용:**
+- 저장 전 `grep "\"project\":\"$PROJECT_NAME\"" ~/history/index.jsonl | tail -5`로 최근 5건 확인
+- 동일 slug가 같은 날짜에 이미 존재하면 `-2`, `-3` 접미사 추가
+- 직전 세션의 "후속 작업" 항목이 이번 세션과 연관되면 "요약"에 연속 작업임을 명시
