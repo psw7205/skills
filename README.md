@@ -12,6 +12,7 @@
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
 | `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
 | `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
+| `git-commit` | 커밋 메시지 작성과 PR 생성 워크플로우 가이드 | "커밋 만들어", "PR 올려줘", "commit and push" |
 
 ## 설치
 
@@ -50,14 +51,18 @@ custom-skills/
 │   ├── skill-guide/
 │   │   ├── SKILL.md
 │   │   └── references/guide.md
-│   ├── trace-change-why/SKILL.md
+│   ├── git-commit/SKILL.md
 │   ├── session-history/SKILL.md
+│   ├── trace-change-why/
+│   │   ├── SKILL.md
+│   │   └── scripts/find-session.sh
 │   └── video-subtitle-dl/
 │       ├── SKILL.md
-│       └── references/
-│           ├── yt-dlp-options.md
-│           └── translation-guide.md
-├── docs/                  # 참고 자료
+│       ├── references/
+│       │   ├── yt-dlp-options.md
+│       │   └── translation-guide.md
+│       └── scripts/fetch-subs.sh
+├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인
 └── README.md
 ```

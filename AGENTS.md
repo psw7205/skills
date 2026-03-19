@@ -6,10 +6,11 @@ This repository is a small skill collection, not an application. Keep changes sc
 
 - `skills/<skill-name>/SKILL.md`: one directory per skill; this is the primary source file.
 - `skills/<skill-name>/references/`: optional supporting material when a skill needs reference docs.
-- `docs/`: maintainer notes or research, if added later.
+- `skills/<skill-name>/scripts/`: optional shell scripts that a skill invokes at runtime.
+- `docs/`: 스킬 빌딩 참고 자료 및 플랜 아카이브.
 - `.claude/settings.local.json`: local agent/editor settings; do not rely on it for shared behavior.
 
-Current examples include `skills/session-history/SKILL.md` and `skills/trace-change-why/SKILL.md`. Prefer shallow layouts unless reference files are necessary.
+현재 `git-commit`, `session-history`, `skill-guide`, `trace-change-why`, `video-subtitle-dl` 5개 스킬이 등록되어 있다. Prefer shallow layouts unless reference files or scripts are necessary.
 
 ## Build, Test, and Development Commands
 
@@ -49,6 +50,6 @@ Validation is manual:
 
 ## Commit & Pull Request Guidelines
 
-This repository currently has no commit history, so there is no convention to mirror. Use short imperative commit subjects, for example `Add session history skill`.
+Use short imperative commit subjects in Korean, for example `video-subtitle-dl 스킬 추가 및 관련 문서 정리`.
 
 Pull requests should stay narrow and include a short summary, affected paths, manual validation performed, and sample trigger phrases when behavior changes.
