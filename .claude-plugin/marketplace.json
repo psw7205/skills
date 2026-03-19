@@ -1,0 +1,19 @@
+{
+  "name": "custom-tools",
+  "owner": {
+    "name": "psw7205"
+  },
+  "plugins": [
+    {
+      "name": "custom-tools",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/session-history",
+        "./skills/trace-change-why",
+        "./skills/skill-guide",
+        "./skills/video-subtitle-dl"
+      ]
+    }
+  ]
+}

@@ -37,7 +37,7 @@ description: >
 ## 경로 규칙
 
 - **project_name**: `basename $PWD` (현재 작업 디렉토리 이름)
-- **저장 경로**: `~/history/projects/{project_name}/{YYYY-MM-DD-HH-mm}-{summary-slug}.md`
+- **저장 경로**: `~/history/{YYYY-MM-DD}/{project_name}/{HH-mm}-{summary-slug}.md`
 - **summary-slug**: 대화 핵심을 영문 kebab-case로 2-4단어 (예: `auth-middleware-decision`, `api-refactor-feedback`)
 - 디렉토리가 없으면 `mkdir -p`로 생성
 
@@ -84,10 +84,10 @@ description: >
 
 ## 실행 절차
 
-1. 현재 시각을 가져온다: `date +%Y-%m-%d-%H-%M` (파일명용), `date +"%Y-%m-%d %H:%M"` (제목용)
+1. 현재 시각을 가져온다: `date +%Y-%m-%d` (디렉토리용), `date +%H-%M` (파일명용), `date +"%Y-%m-%d %H:%M"` (제목용)
 2. project_name을 결정한다: `basename $PWD`
 3. 대화 내용을 위 원칙과 포맷에 따라 요약한다
 4. summary-slug를 생성한다 (대화 핵심을 영문 kebab-case 2-4단어)
-5. `mkdir -p ~/history/projects/{project_name}/`
+5. `mkdir -p ~/history/{YYYY-MM-DD}/{project_name}/`
 6. Write 도구로 파일을 저장한다
 7. 저장 경로를 사용자에게 알려준다
