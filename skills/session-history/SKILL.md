@@ -40,7 +40,10 @@ description: >
 ## 경로 규칙
 
 - **project_name**: `basename $(realpath $PWD)` (symlink를 해소한 실제 디렉토리 이름)
-- **저장 경로**: `~/history/{YYYY-MM-DD}/{project_name}/{HH-mm}-{summary-slug}.md`
+- **target_date**: 사용자가 날짜를 입력하면 해당 날짜, 없으면 오늘 날짜 (`YYYY-MM-DD`)
+  - 예: "세션 정리해줘 2026-03-18" → `2026-03-18`
+  - 예: "세션 정리해줘" → 오늘 날짜
+- **저장 경로**: `~/history/{target_date}/{project_name}/{HH-mm}-{summary-slug}.md`
 - **summary-slug**: 대화 핵심을 영문 kebab-case로 2-4단어 (예: `auth-middleware-decision`, `api-refactor-feedback`)
 - 디렉토리가 없으면 `mkdir -p`로 생성
 
@@ -95,14 +98,15 @@ description: >
 
 ## 실행 절차
 
-1. 현재 시각을 가져온다: `date +%Y-%m-%d` (디렉토리용), `date +%H-%M` (파일명용), `date +"%Y-%m-%d %H:%M"` (제목용)
-2. project_name을 결정한다: `basename $(realpath $PWD)`
-3. 대화 내용을 위 원칙과 포맷에 따라 요약한다
-4. summary-slug를 생성한다 (대화 핵심을 영문 kebab-case 2-4단어)
-5. `mkdir -p ~/history/{YYYY-MM-DD}/{project_name}/`
-6. Write 도구로 파일을 저장한다
-7. 이력 인덱스를 업데이트한다 (아래 "이력 관리" 참조)
-8. 저장 경로를 사용자에게 알려준다
+1. **target_date를 결정한다**: 사용자가 날짜를 입력했으면 해당 날짜, 없으면 `date +%Y-%m-%d`
+2. 현재 시각을 가져온다: `date +%H-%M` (파일명용)
+3. project_name을 결정한다: `basename $(realpath $PWD)`
+4. 대화 내용을 위 원칙과 포맷에 따라 요약한다
+5. summary-slug를 생성한다 (대화 핵심을 영문 kebab-case 2-4단어)
+6. `mkdir -p ~/history/{target_date}/{project_name}/`
+7. Write 도구로 파일을 저장한다 (제목: `# {project} — {target_date} HH:mm`)
+8. 이력 인덱스를 업데이트한다 (아래 "이력 관리" 참조, date 필드에 target_date 사용)
+9. 저장 경로를 사용자에게 알려준다
 
 ## 이력 관리 (Memory)
 
@@ -115,7 +119,7 @@ touch ~/history/index.jsonl
 
 저장 직후 아래 형식으로 한 줄 append:
 ```jsonl
-{"date":"2026-03-19","time":"14:30","project":"custom-skills","slug":"auth-middleware-decision","path":"~/history/2026-03-19/custom-skills/14-30-auth-middleware-decision.md"}
+{"date":"2026-03-18","time":"14:30","project":"custom-skills","slug":"auth-middleware-decision","path":"~/history/2026-03-18/custom-skills/14-30-auth-middleware-decision.md"}
 ```
 
 **이전 기록 활용:**
