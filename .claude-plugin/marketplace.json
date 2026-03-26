@@ -9,9 +9,12 @@
       "source": "./",
       "strict": false,
       "skills": [
+        "./skills/git-commit",
+        "./skills/self-feedback-loop",
         "./skills/session-history",
-        "./skills/trace-change-why",
         "./skills/skill-guide",
+        "./skills/tmux",
+        "./skills/trace-change-why",
         "./skills/video-subtitle-dl"
       ]
     }

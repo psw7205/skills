@@ -7,6 +7,7 @@ This repository is a small skill collection, not an application. Keep changes sc
 - `skills/<skill-name>/SKILL.md`: one directory per skill; this is the primary source file.
 - `skills/<skill-name>/references/`: optional supporting material when a skill needs reference docs.
 - `skills/<skill-name>/scripts/`: optional shell scripts that a skill invokes at runtime.
+- `.claude-plugin/marketplace.json`: manifest that controls skill categorization in `npx skills add`. Always register new skills in the `skills` array.
 - `docs/`: 스킬 빌딩 참고 자료 및 플랜 아카이브.
 - `.claude/settings.local.json`: local agent/editor settings; do not rely on it for shared behavior.
 

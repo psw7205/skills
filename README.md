@@ -24,7 +24,7 @@ npx skills add ./
 
 ## 스킬 추가
 
-`skills/<스킬명>/SKILL.md` 파일을 생성한다.
+1. `skills/<스킬명>/SKILL.md` 파일을 생성한다.
 
 ```yaml
 ---
@@ -34,6 +34,16 @@ description: "트리거 조건을 포함한 설명"
 
 # 스킬 본문 (Markdown)
 ```
+
+2. `.claude-plugin/marketplace.json`의 `skills` 배열에 경로를 추가한다.
+
+```json
+"skills": [
+  "./skills/<스킬명>"
+]
+```
+
+> 이 파일에 등록하지 않으면 `npx skills add`에서 "Other"로 분류된다.
 
 필요할 때만 `references/` 하위 디렉토리에 보조 문서를 둔다.
 
