@@ -10,7 +10,7 @@ This repository is a small skill collection, not an application. Keep changes sc
 - `docs/`: 스킬 빌딩 참고 자료 및 플랜 아카이브.
 - `.claude/settings.local.json`: local agent/editor settings; do not rely on it for shared behavior.
 
-현재 `git-commit`, `session-history`, `skill-guide`, `trace-change-why`, `video-subtitle-dl` 5개 스킬이 등록되어 있다. Prefer shallow layouts unless reference files or scripts are necessary.
+현재 `git-commit`, `self-feedback-loop`, `session-history`, `skill-guide`, `tmux`, `trace-change-why`, `video-subtitle-dl` 7개 스킬이 등록되어 있다. Prefer shallow layouts unless reference files or scripts are necessary.
 
 ## Build, Test, and Development Commands
 
