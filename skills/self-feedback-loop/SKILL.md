@@ -1,15 +1,13 @@
 ---
 name: self-feedback-loop
 description: >
-  구현 결과에 대해 review-fix-verify-commit 루프를 반복 수행하는 스킬.
-  plan 기준으로 현재 코드를 검토하고, findings를 severity 순으로 정리하고,
-  수정 후 검증하고 커밋하는 사이클을 material finding이 소진될 때까지 반복한다.
   "self-feedback loop 돌려", "피드백 루프 시작", "review fix commit 반복",
   "구현 결과 검토하고 수정해", "코드 리뷰하고 고치고 커밋까지",
   "adversarial review", "self-review", "review session 시작",
   "review loop", "셀프 리뷰", "리뷰 루프", "피드백 루프",
   "구현 검토해줘", "review and fix", "코드 점검하고 수정해줘"
   등에서 트리거.
+  plan 기준 review-fix-verify-commit 루프를 material finding 소진까지 반복.
 ---
 
 # Self-Feedback Loop
@@ -96,8 +94,8 @@ fix(scope): 구체적 수정 내용
 ## 종료 조건
 
 - **연속 2회 리뷰에서 material finding(critical/high/medium)이 없으면 종료한다.**
-- 최소 1회 full cycle(review → fix → verify → commit)은 반드시 수행한다.
-- 종료 전 반드시 **full test suite**를 실행하고 green을 확인한다.
+- 최소 1회 review는 반드시 수행한다. finding이 없으면 review만으로 cycle 완료를 인정한다.
+- 종료 전 가능하면 **full test suite**를 실행한다. 환경 제약(대형 repo, 느린 CI, 부분 checkout)으로 불가하면 변경 범위에 해당하는 test suite로 대체하고, 그 사실을 Final 출력에 명시한다.
 - low severity만 남은 경우 한 번에 모아서 수정하고 종료해도 된다.
 
 ## 출력 포맷

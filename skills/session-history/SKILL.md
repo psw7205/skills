@@ -59,34 +59,7 @@ description: >
 
 ## 출력 포맷
 
-아래 템플릿에서 해당 세션에 내용이 있는 섹션만 포함한다:
-
-```markdown
-# {project} — {YYYY-MM-DD HH:mm}
-
-## 요약
-이 세션에서 무엇을 했고 왜 했는지 1-3문장.
-
-## 주요 결정
-- **{결정 내용}** — {근거/이유}
-
-## 피드백 & 수정
-- {사용자가 수정 지시한 내용} — {왜 수정했는지}
-
-## 작업 내역
-- [x] 완료된 작업
-- [ ] 시도했으나 미완료
-
-## 변경 사항
-- `path/to/file.ts` — 변경 내용 한 줄 설명
-
-## 후속 작업
-- 다음에 이어서 할 것, 열린 질문, 주의사항
-```
-
-### 섹션 순서의 이유
-
-"주요 결정"과 "피드백"이 상위에 있는 것은 의도적이다. 이 스킬의 목적이 "왜" 중심 기록이므로, 결정과 근거가 가장 먼저 눈에 들어와야 한다. 작업 내역과 변경 사항은 부차적 맥락이다.
+`references/output-template.md` 참조. 해당 세션에 내용이 있는 섹션만 포함한다.
 
 ## Gotchas
 
@@ -110,19 +83,4 @@ description: >
 
 ## 이력 관리 (Memory)
 
-저장할 때마다 `~/history/index.jsonl`에 한 줄 추가한다. 이전 기록을 참조하여 중복 방지 및 연속 작업 컨텍스트를 제공한다.
-
-```bash
-# 인덱스 파일 초기화 (없을 때만)
-touch ~/history/index.jsonl
-```
-
-저장 직후 아래 형식으로 한 줄 append:
-```jsonl
-{"date":"2026-03-18","time":"14:30","project":"custom-skills","slug":"auth-middleware-decision","path":"~/history/2026-03-18/custom-skills/14-30-auth-middleware-decision.md"}
-```
-
-**이전 기록 활용:**
-- 저장 전 `grep "\"project\":\"$PROJECT_NAME\"" ~/history/index.jsonl | tail -5`로 최근 5건 확인
-- 동일 slug가 같은 날짜에 이미 존재하면 `-2`, `-3` 접미사 추가
-- 직전 세션의 "후속 작업" 항목이 이번 세션과 연관되면 "요약"에 연속 작업임을 명시
+`references/index-management.md` 참조. 저장할 때마다 `~/history/index.jsonl`에 인덱스를 추가한다.

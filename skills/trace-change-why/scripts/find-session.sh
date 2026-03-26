@@ -12,7 +12,7 @@ FILE_PATTERN="${1:?Usage: find-session.sh <file-pattern> [project-dir]}"
 PROJECT_DIR="${2:-$PWD}"
 
 # 프로젝트 경로 → 세션 디렉토리 변환 (/ → -)
-SESSION_DIR="$HOME/.claude/projects/$(echo "$PROJECT_DIR" | tr '/' '-' | cut -c2-)"
+SESSION_DIR="$HOME/.claude/projects/$(echo "$PROJECT_DIR" | tr '/' '-')"
 
 if [[ ! -d "$SESSION_DIR" ]]; then
   echo "ERROR: 세션 디렉토리 없음: $SESSION_DIR" >&2

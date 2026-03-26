@@ -47,7 +47,8 @@ Material findings: **none** (연속 2회 clean)
 ```
 $ {test command}
 # 예: pnpm test
-Tests: 148 passed, 148 total```
+Tests: 148 passed, 148 total
+```
 
 ## Residual Risks
 
@@ -68,5 +69,3 @@ Checked: diff (N files), tests (N passing), docs (aligned), plan status (all che
 
 → 종료 조건 충족 여부: {예/아니오 + 사유}
 ```
-
-  sudo ln -s /Applications/Docker.app/Contents/Resources/bin/docker /usr/local/bin/docker && sudo ln -s /Applications/Docker.app/Contents/Resources/bin/docker-compose /usr/local/bin/docker-compose

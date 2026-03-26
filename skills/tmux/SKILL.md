@@ -82,9 +82,12 @@ fi
 
 용도에 따라 분기:
 
-**SSH**: 프롬프트 패턴(`$`, `#`, `>`) 출현 확인.
+**SSH**: 프롬프트 패턴 출현 polling.
 ```bash
-sleep 3 && tmux capture-pane -t work -p -J | tail -5
+for i in $(seq 1 10); do
+  tmux capture-pane -t work -p -J | grep -qE '^\s*[\$#>]\s*$' && break
+  sleep 1
+done
 ```
 
 **dev 서버**: ready 시그널 polling.
@@ -104,26 +107,14 @@ done
 tmux send-keys -t <target> -l -- '<command>'
 sleep 0.1
 tmux send-keys -t <target> Enter
-sleep 2
+# 결과 필요 시 polling 또는 최소 대기 후 capture
+sleep 1
 tmux capture-pane -t <target> -p -J
 ```
 
 핵심 플래그:
 - **`-l`** (literal): 키 이름 해석을 방지. `Enter`라는 문자열을 보내야 할 때 필수.
 - text와 `Enter`를 분리 전송하면 TUI에서 paste/multiline 엣지케이스를 피한다.
-
-**특수 키:**
-
-| 키 | tmux 이름 |
-|----|-----------|
-| Enter | `Enter` |
-| Escape | `Escape` |
-| Ctrl+C | `C-c` |
-| Ctrl+D | `C-d` |
-| Ctrl+Z | `C-z` |
-| 방향키 | `Up`, `Down`, `Left`, `Right` |
-| Backspace | `BSpace` |
-| Space | `Space` |
 
 ### 5. 긴 작업 polling
 
@@ -137,7 +128,7 @@ for i in $(seq 1 30); do
 done
 ```
 
-에이전트/인터랙티브 프로세스는 마커 불가 — 셸 프롬프트 복귀(`❯`, `$`)로 완료 판단.
+에이전트/인터랙티브 프로세스는 마커 불가 — 셸 프롬프트 복귀로 완료 판단. 줄 시작 앵커 기반(`^\s*(❯|\$)\s*$`)으로 검사하거나, `pane_current_command`가 셸(bash/zsh)인지 확인하는 방식을 사용한다.
 
 ### 6. 출력 읽기
 
@@ -186,7 +177,7 @@ done
 완료 감지 — 셸 프롬프트 복귀 확인:
 ```bash
 for w in agent-1 agent-2 agent-3; do
-  if tmux capture-pane -p -t "$SESSION:$w" -S -3 | grep -qE '❯|\$'; then
+  if tmux capture-pane -p -t "$SESSION:$w" -S -3 | grep -qE '^\s*(❯|\$)\s*$'; then
     echo "$w: DONE"
   else
     echo "$w: running..."
@@ -199,7 +190,7 @@ done
 ## Gotchas
 
 - **capture-pane 빈 결과**: pane 크기가 0이거나 세션이 종료된 상태. `list-panes`로 존재 여부부터 확인.
-- **send-keys 직후 capture 누락**: send-keys와 capture-pane 사이에 반드시 sleep. 최소 1초, 네트워크 명령은 3초 이상.
+- **send-keys 직후 capture 누락**: send-keys와 capture-pane 사이에 대기 필요. 단발 명령은 `sleep 1`, 네트워크/장시간 명령은 polling 패턴 사용.
 - **SSH 호스트 키 / 비밀번호 프롬프트**: 자동으로 응답하지 말 것. 사용자에게 알리고 직접 입력하게 한다. sudo 비밀번호도 동일.
 - **ANSI 이스케이프 오염**: 컬러 출력이 많으면 capture가 지저분하다. `| sed 's/\x1b\[[0-9;]*m//g'`로 정리하거나 `--no-color` 플래그.
 - **기존 세션/pane 파괴 금지**: `kill-session`, `kill-server`는 사용자 확인 없이 실행하지 말 것. 다른 Claude 인스턴스나 사용자가 쓰고 있을 수 있다.

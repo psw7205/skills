@@ -62,11 +62,11 @@ bash "${CLAUDE_PLUGIN_ROOT}/skills/video-subtitle-dl/scripts/fetch-subs.sh" "<UR
 
 | 순위 | 조건 | 액션 | 다음 단계 |
 |------|------|------|-----------|
-| 1 | 한국어 수동 자막 있음 | `--write-subs --sub-langs ko --convert-subs srt` | → Step 5 |
-| 2 | 한국어 자동 자막 있음 | `--write-auto-subs --sub-langs ko --convert-subs srt` | → Step 5 |
-| 3 | 영어 수동 자막 있음 | `--write-subs --sub-langs en` | → Step 4 |
-| 4 | 영어 자동 자막 있음 | `--write-auto-subs --sub-langs en` | → Step 4 |
-| 5 | 둘 다 없음 | — | → Step 6 (자막 없음) |
+| 1 | 한국어 수동 자막 있음 | `--write-subs --sub-langs ko --convert-subs srt` | → Step 4 (포맷 변환) |
+| 2 | 한국어 자동 자막 있음 | `--write-auto-subs --sub-langs ko --convert-subs srt` | → Step 4 (포맷 변환) |
+| 3 | 영어 수동 자막 있음 | `--write-subs --sub-langs en` | → Step 3 (번역) |
+| 4 | 영어 자동 자막 있음 | `--write-auto-subs --sub-langs en` | → Step 3 (번역) |
+| 5 | 둘 다 없음 | — | → Step 5 (자막 없음) |
 
 ### 2. 다운로드 실패 시
 
@@ -99,7 +99,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/skills/video-subtitle-dl/scripts/fetch-subs.sh" "<UR
 ### 4. 포맷 변환 및 저장
 
 **파일명 규칙:**
-- 원본(영어): `{영상제목}.en.vtt` (예: `codex-for-software-engineers.en.vtt`)
+- 원본(영어): `{영상제목}.en.{vtt|srt}` — 스크립트가 `vtt/srt/best` 순으로 받으므로 포맷이 다를 수 있다. `ls *.srt *.vtt`로 실제 파일명 확인.
 - 번역본: `{영상제목}.ko.srt` (예: `codex-for-software-engineers.ko.srt`)
 - 한국어 자막 직접 다운로드: `{영상제목}.ko.srt` — Step 1에서 `--convert-subs srt`로 이미 SRT이므로 추가 변환 불필요.
 - 영상 제목은 `yt-dlp`가 생성한 파일명 기반. 특수문자 제거, 공백은 하이픈.
@@ -120,7 +120,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/skills/video-subtitle-dl/scripts/fetch-subs.sh" "<UR
 ## Gotchas
 
 - 자동 생성 자막(auto-sub)은 타임코드가 1-2초 단위로 과도하게 쪼개져 있다. 번역 시 인접 cue를 문맥 단위로 묶어 읽어야 자연스러운 번역이 된다.
-- VTT→SRT 변환 후 `<c>`, `<font>`, `<b>` 등 HTML 태그가 잔존할 수 있다. 변환 후 `grep '<[a-z]' *.srt`로 확인하고 제거.
+- VTT→SRT 변환 후 `<c>`, `<font>` 등 VTT 전용 태그가 잔존할 수 있다. 변환 후 `grep '<[a-z]' *.srt`로 확인하고 VTT 전용 태그는 제거. `<b>`, `<i>`는 SRT에서도 지원하므로 유지.
 - 연령 제한/멤버십 전용 영상은 `--cookies-from-browser`로도 실패할 수 있다. 이 경우 브라우저에서 수동 export한 cookies.txt 파일이 더 안정적.
 - `%(title)s`에 `/`, `?`, `"` 등 파일시스템 금지 문자가 포함되면 yt-dlp가 자동 치환하지만, 후속 파일 참조 시 실제 생성된 파일명을 `ls *.srt *.vtt`로 확인할 것.
 - 일부 플랫폼(Vimeo, Naver TV 등)은 자막 포맷이 비표준이라 `--convert-subs srt`가 실패할 수 있다. 이때는 원본 포맷 그대로 저장 후 수동 변환.
