@@ -14,6 +14,7 @@
         "./skills/session-history",
         "./skills/skill-guide",
         "./skills/tmux",
+        "./skills/cmux-help",
         "./skills/trace-change-why",
         "./skills/prompt",
         "./skills/video-subtitle-dl"
