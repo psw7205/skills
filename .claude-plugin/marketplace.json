@@ -15,6 +15,7 @@
         "./skills/skill-guide",
         "./skills/tmux",
         "./skills/trace-change-why",
+        "./skills/prompt",
         "./skills/video-subtitle-dl"
       ]
     }
