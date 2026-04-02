@@ -9,7 +9,7 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/git-commit",
+        "./skills/commit-msg",
         "./skills/self-feedback-loop",
         "./skills/session-history",
         "./skills/skill-guide",

@@ -12,7 +12,7 @@
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
 | `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
 | `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
-| `git-commit` | 커밋 메시지 작성과 PR 생성 워크플로우 가이드 | "커밋 만들어", "PR 올려줘", "commit and push" |
+| `commit-msg` | 커밋 메시지 추천 (실행 안 함) + 가드레일 체크 | "커밋 만들어", "커밋 메시지 추천", "뭐라고 커밋하지" |
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 돌려", "self-review", "review loop" |
 | `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
@@ -65,7 +65,7 @@ custom-skills/
 │   ├── skill-guide/
 │   │   ├── SKILL.md
 │   │   └── references/guide.md
-│   ├── git-commit/SKILL.md
+│   ├── commit-msg/SKILL.md
 │   ├── session-history/SKILL.md
 │   ├── trace-change-why/
 │   │   ├── SKILL.md
