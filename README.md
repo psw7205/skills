@@ -17,6 +17,7 @@
 | `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 전체 레퍼런스 (커맨드, 개념, 워크플로우) | `/cmux-help` (수동 트리거) |
+| `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 
 ## 설치
 
@@ -85,12 +86,15 @@ custom-skills/
 │   │   └── references/
 │   │       ├── commands.md   # 커맨드별 상세 옵션, 엣지케이스
 │   │       └── browser.md    # 브라우저 자동화 상세
-│   └── video-subtitle-dl/
+│   ├── video-subtitle-dl/
+│   │   ├── SKILL.md
+│   │   ├── references/
+│   │   │   ├── yt-dlp-options.md
+│   │   │   └── translation-guide.md
+│   │   └── scripts/fetch-subs.sh
+│   └── statusline/
 │       ├── SKILL.md
-│       ├── references/
-│       │   ├── yt-dlp-options.md
-│       │   └── translation-guide.md
-│       └── scripts/fetch-subs.sh
+│       └── statusline-command.sh
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인
 └── README.md
