@@ -11,7 +11,12 @@ STAMP=$(date +%Y%m%d-%H%M%S)
 
 rewrite() {
   local label="$1"
-  local new_cmd="git stash push --include-untracked -m \"auto-backup before ${label} ${STAMP}\" 2>/dev/null; ${CMD}"
+  local cd_prefix="" git_cmd="$CMD"
+  if [[ "$CMD" =~ ^(cd[[:space:]]+[^&]+&&[[:space:]]*)(.+)$ ]]; then
+    cd_prefix="${BASH_REMATCH[1]}"
+    git_cmd="${BASH_REMATCH[2]}"
+  fi
+  local new_cmd="${cd_prefix}git stash push --include-untracked -m \"auto-backup before ${label} ${STAMP}\" 2>/dev/null; ${git_cmd}"
   jq -n --arg msg "[guard] auto-stash 실행 후 ${label} 진행. 복구: git stash list → git stash pop" \
         --arg cmd "$new_cmd" '{
     "systemMessage": $msg,
@@ -42,6 +47,8 @@ PUSH_CHECK=$(echo "$CMD" | sed -E 's/--force-(with-lease|if-includes)//g')
 echo "$PUSH_CHECK" | grep -qE '\bgit\s+push\s+.*(-f|--force)\b' && deny "git push --force"
 
 # --- rewrite: auto-stash before destructive local commands ---
+# Note: git stash drop/clear는 의도적으로 가드하지 않음.
+# 이 훅의 책임은 파괴적 명령 전 auto-stash이지, stash lifecycle 관리가 아님.
 echo "$CMD" | grep -qE '\bgit\s+clean\b' && rewrite "git clean"
 echo "$CMD" | grep -qE '\bgit\s+checkout\s+(--\s+)?\.(\s|$)' && rewrite "git checkout ."
 echo "$CMD" | grep -qE '\bgit\s+reset\s+--hard\b' && rewrite "git reset --hard"
