@@ -17,7 +17,9 @@
         "./skills/cmux-help",
         "./skills/trace-change-why",
         "./skills/prompt",
-        "./skills/video-subtitle-dl"
+        "./skills/video-subtitle-dl",
+        "./skills/statusline",
+        "./skills/setup-hooks"
       ]
     }
   ]

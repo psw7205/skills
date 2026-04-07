@@ -11,7 +11,7 @@ This repository is a small skill collection, not an application. Keep changes sc
 - `docs/`: 스킬 빌딩 참고 자료 및 플랜 아카이브.
 - `.claude/settings.local.json`: local agent/editor settings; do not rely on it for shared behavior.
 
-현재 `cmux-help`, `commit-msg`, `prompt`, `self-feedback-loop`, `session-history`, `skill-guide`, `statusline`, `tmux`, `trace-change-why`, `video-subtitle-dl` 10개 스킬이 등록되어 있다. Prefer shallow layouts unless reference files or scripts are necessary.
+현재 `cmux-help`, `commit-msg`, `prompt`, `self-feedback-loop`, `session-history`, `setup-hooks`, `skill-guide`, `statusline`, `tmux`, `trace-change-why`, `video-subtitle-dl` 11개 스킬이 등록되어 있다. `setup-hooks` 스킬은 guard-untracked 훅을 `~/.claude/settings.json`에 설치/제거한다. 이 훅은 `git clean`, `git checkout .`, `git reset --hard`, `git restore .` 실행 전 auto-stash를 삽입하고, `git push --force`는 deny한다. Prefer shallow layouts unless reference files or scripts are necessary.
 
 ## Build, Test, and Development Commands
 
