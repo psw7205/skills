@@ -20,6 +20,7 @@
 | `setup-hooks` | git 안전 훅 설치/제거 (파괴적 명령 전 auto-stash, force push deny) | "hooks 설치", "guard 설치", "훅 제거" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 | `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
+| `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log + 네트워크 터미널 브릿지 | "console.log 안 보여", "Metro 로그 안 나와", "RN network debugging" |
 
 ## 설치
 
@@ -97,9 +98,15 @@ custom-skills/
 │   ├── setup-hooks/
 │   │   ├── SKILL.md
 │   │   └── scripts/guard-untracked.sh
-│   └── statusline/
+│   ├── statusline/
+│   │   ├── SKILL.md
+│   │   └── statusline-command.sh
+│   └── rn-cdp-bridge/
 │       ├── SKILL.md
-│       └── statusline-command.sh
+│       ├── scripts/cdp-console.mjs
+│       └── references/
+│           ├── inspector-proxy.md
+│           └── cdp-domains.md
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인
 └── README.md

@@ -20,7 +20,8 @@
         "./skills/video-subtitle-dl",
         "./skills/statusline",
         "./skills/setup-hooks",
-        "./skills/clean-memory"
+        "./skills/clean-memory",
+        "./skills/rn-cdp-bridge"
       ]
     }
   ]
