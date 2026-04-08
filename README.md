@@ -19,6 +19,7 @@
 | `cmux-help` | cmux CLI 전체 레퍼런스 (커맨드, 개념, 워크플로우) | `/cmux-help` (수동 트리거) |
 | `setup-hooks` | git 안전 훅 설치/제거 (파괴적 명령 전 auto-stash, force push deny) | "hooks 설치", "guard 설치", "훅 제거" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
+| `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
 
 ## 설치
 

@@ -19,7 +19,8 @@
         "./skills/prompt",
         "./skills/video-subtitle-dl",
         "./skills/statusline",
-        "./skills/setup-hooks"
+        "./skills/setup-hooks",
+        "./skills/clean-memory"
       ]
     }
   ]
