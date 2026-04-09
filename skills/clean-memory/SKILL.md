@@ -3,9 +3,9 @@ name: clean-memory
 description: >
   프로젝트 메모리를 스캔하여 글로벌 CLAUDE.md와 중복된 항목을 정리하고,
   범용 규칙을 글로벌로 승격하는 스킬.
-  "메모리 정리해줘", "메모리 청소", "메모리 정리", "중복 메모리 삭제",
-  "clean memory", "prune memory", "memory cleanup",
-  "글로벌로 올려", "메모리 승격", "promote memory"
+  "메모리 정리해줘", "메모리 청소", "중복 메모리 삭제",
+  "글로벌로 올려", "메모리 승격",
+  "clean memory", "prune memory", "promote memory"
   등에서 트리거.
 ---
 

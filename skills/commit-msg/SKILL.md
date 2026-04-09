@@ -1,12 +1,12 @@
 ---
 name: commit-msg
 description: >
+  변경사항을 분석하고 프로젝트 스타일에 맞는 커밋 메시지를 추천한다.
+  git commit, git add, git push는 실행하지 않는다.
   "커밋 만들어", "커밋해줘", "commit", "변경사항 커밋",
   "커밋 메시지 어떻게 쓰지", "커밋 메시지 추천", "뭐라고 커밋하지",
   "make a commit", "commit message", "what should I commit as"
   등에서 트리거.
-  변경사항을 분석하고 프로젝트 스타일에 맞는 커밋 메시지를 추천한다.
-  git commit, git add, git push는 실행하지 않는다.
 ---
 
 # Commit Message

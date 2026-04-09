@@ -187,6 +187,17 @@ done
 
 병렬 작업 시 git worktree로 브랜치 충돌을 방지한다.
 
+멀티라인 프롬프트를 실행 중인 에이전트에 전송:
+```bash
+cat << 'EOF' | tmux load-buffer -
+멀티라인 프롬프트 내용
+EOF
+tmux paste-buffer -t "$SESSION:agent-1"
+tmux send-keys -t "$SESSION:agent-1" Enter
+```
+
+`send-keys`의 줄바꿈은 Enter로 변환되어 TUI가 즉시 제출한다. `paste-buffer`는 bracketed paste로 전달되므로 줄바꿈이 보존된다.
+
 ## Gotchas
 
 - **capture-pane 빈 결과**: pane 크기가 0이거나 세션이 종료된 상태. `list-panes`로 존재 여부부터 확인.
@@ -194,7 +205,8 @@ done
 - **SSH 호스트 키 / 비밀번호 프롬프트**: 자동으로 응답하지 말 것. 사용자에게 알리고 직접 입력하게 한다. sudo 비밀번호도 동일.
 - **ANSI 이스케이프 오염**: 컬러 출력이 많으면 capture가 지저분하다. `| sed 's/\x1b\[[0-9;]*m//g'`로 정리하거나 `--no-color` 플래그.
 - **기존 세션/pane 파괴 금지**: `kill-session`, `kill-server`는 사용자 확인 없이 실행하지 말 것. 다른 Claude 인스턴스나 사용자가 쓰고 있을 수 있다.
-- **인터랙티브 TUI**: vim, htop 등은 send-keys로 제어하지 말 것. 비대화형 대안 사용 (`cat`, `ps aux`).
+- **비-텍스트 TUI** (vim, htop): `send-keys`로 제어하지 말 것. 비대화형 대안 사용 (`cat`, `ps aux`).
+- **텍스트 입력 TUI** (Claude Code, Codex 등): 단발 명령은 `send-keys` OK. 멀티라인은 `send-keys`의 줄바꿈이 Enter(=제출)로 변환되어 한 줄로 붙는다. `load-buffer` + `paste-buffer` 사용.
 - **Python REPL**: `PYTHON_BASIC_REPL=1` 환경변수를 설정해야 한다. 기본 Python REPL은 readline/fancy prompt가 send-keys 흐름을 깨뜨린다.
 - **tmux 미설치/미실행**: `tmux list-sessions`가 실패하면 tmux가 없거나 서버가 안 떠있는 것. 사용자에게 안내.
 - **new-session에 inline command 금지**: shell init(PATH, direnv, nvm 등)을 우회한다. 반드시 세션 생성 후 `send-keys`로 실행.

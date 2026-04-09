@@ -1,13 +1,13 @@
 ---
 name: rn-cdp-bridge
 description: >
-  This skill should be used when the user needs to recover console.log output
-  or monitor network requests in React Native 0.77+ where Metro log forwarding
-  was removed. Covers CDP WebSocket connection to Metro InspectorProxy,
-  target discovery, and a bridge script for streaming console/network events
-  to the terminal. Relevant when: "console.log가 안 보여", "Metro 로그가 안 나와",
+  React Native 0.77+에서 제거된 Metro 로그 포워딩을 CDP WebSocket으로 대체하는 런북.
+  console.log 출력 복구, 네트워크 요청 모니터링, InspectorProxy 타겟 디스커버리,
+  브릿지 스크립트를 통한 터미널 스트리밍을 다룬다.
+  "console.log가 안 보여", "Metro 로그가 안 나와", "RN 로그가 안 찍혀",
   "RN console.log not showing", "Metro logs missing", "CDP 연결",
-  "DevTools 연결 안 됨", "RN network debugging", "RN 디버깅 런북".
+  "DevTools 연결 안 됨", "RN network debugging", "RN 디버깅 런북"
+  등에서 트리거.
 ---
 
 # RN Metro CDP

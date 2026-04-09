@@ -21,7 +21,8 @@
         "./skills/statusline",
         "./skills/setup-hooks",
         "./skills/clean-memory",
-        "./skills/rn-cdp-bridge"
+        "./skills/rn-cdp-bridge",
+        "./skills/git-diagnosis"
       ]
     }
   ]

@@ -1,7 +1,8 @@
 ---
 name: statusline
 description: >
-  Claude Code statusline 스크립트 설치.
+  Claude Code 터미널 하단에 디렉토리, git branch, context 사용량,
+  rate limit, 변경 라인 수를 표시하는 2줄 statusline 스크립트를 설치한다.
   "statusline 설치", "statusline 설정", "스테이터스라인 설치",
   "상태바 설치", "install statusline", "setup statusline"
   등에서 트리거.

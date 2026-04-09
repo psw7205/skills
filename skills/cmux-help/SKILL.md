@@ -2,14 +2,12 @@
 name: cmux-help
 description: >
   cmux CLI 전체 레퍼런스. 커맨드 syntax, 개념, 워크플로우 패턴.
-  "cmux 명령어", "cmux 사용법", "cmux 어떻게", "cmux 커맨드",
-  "cmux help", "cmux reference", "cmux commands", "how to use cmux",
-  "cmux로 어떻게", "cmux 옵션", "cmux browser 사용법",
-  "cmux 세션", "cmux split", "cmux 분할", "cmux 브라우저 열기",
-  "cmux 터미널 보내기", "cmux send", "cmux read-screen",
-  "cmux workspace", "cmux 워크스페이스", "cmux ssh",
-  "cmux 마크다운", "cmux notify", "cmux 알림",
+  "cmux 사용법", "cmux 명령어", "cmux help", "cmux 옵션",
+  "cmux 세션", "cmux split", "cmux 브라우저 열기",
+  "cmux send", "cmux read-screen", "cmux workspace",
+  "cmux ssh", "cmux 마크다운", "cmux notify",
   "cmux pane", "cmux surface", "cmux 탭"
+  등에서 트리거.
 ---
 
 # cmux CLI Reference

@@ -1,13 +1,14 @@
 ---
 name: self-feedback-loop
 description: >
+  구현 결과를 plan 기준으로 반복 검토하여 품질을 끌어올리는
+  review-fix-verify-commit 루프. material finding 소진까지 반복한다.
   "self-feedback loop 돌려", "피드백 루프 시작", "review fix commit 반복",
   "구현 결과 검토하고 수정해", "코드 리뷰하고 고치고 커밋까지",
   "adversarial review", "self-review", "review session 시작",
   "review loop", "셀프 리뷰", "리뷰 루프", "피드백 루프",
   "구현 검토해줘", "review and fix", "코드 점검하고 수정해줘"
   등에서 트리거.
-  plan 기준 review-fix-verify-commit 루프를 material finding 소진까지 반복.
 ---
 
 # Self-Feedback Loop
