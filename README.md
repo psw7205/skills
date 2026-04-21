@@ -22,6 +22,7 @@
 | `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log + 네트워크 터미널 브릿지 | "console.log 안 보여", "Metro 로그 안 나와", "RN network debugging" |
 | `git-diagnosis` | Git 이력 기반 코드베이스 건강 진단 — 교차 분석으로 고위험 코드 식별 | "프로젝트 분석해줘", "코드베이스 진단", "codebase audit" |
+| `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
 
 ## 설치
 
@@ -108,7 +109,9 @@ custom-skills/
 │   │   └── references/
 │   │       ├── inspector-proxy.md
 │   │       └── cdp-domains.md
-│   └── git-diagnosis/
+│   ├── git-diagnosis/
+│   │   └── SKILL.md
+│   └── plan/
 │       └── SKILL.md
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인
