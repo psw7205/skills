@@ -20,8 +20,9 @@ description: >
 이 스킬이 활성되면 아래 모드로 전환한다:
 
 - **review-only 세션이다.** 새 기능 추가, 범위 확장, 설계 재논의를 하지 않는다.
-- **plan이 기준이다.** plan에 없는 개선은 하지 않는다. plan이나 AGENTS.md에 out-of-scope로 명시된 항목을 미구현이라고 지적하지 않는다.
+- **plan이 기준이다.** plan에 없는 개선은 자동 수정하지 않는다. plan이나 AGENTS.md에 out-of-scope로 명시된 항목을 미구현이라고 finding 처리하지 않는다.
 - **surgical fix만 한다.** 수정은 finding에 직접 대응하는 범위로 한정한다. 인접 코드 정리, unrelated refactor, 스타일 통일 금지.
+- **단, 시야는 닫지 않는다.** plan 밖 개선 여지, design smell, 범위 밖 위험은 fix 대상이 아니지만 **Notes**로 누적해 Final에서 한 번에 보고한다.
 
 ## 시작 절차
 
@@ -74,7 +75,21 @@ severity 순으로 정리한다:
 | **medium** | edge case 누락, 불완전한 테스트 | 중복 처리 미흡, 경계값 미검증 |
 | **low** | docs 불일치, 사소한 불일관성 | 가이드 문구와 코드 동작 차이 |
 
-각 finding은 **파일:라인 + 구체적 문제 + 기대 동작**으로 기술한다. "~하면 좋겠다" 수준의 모호한 제안은 finding이 아니다.
+각 finding은 **파일:라인 + 구체적 문제 + 기대 동작**으로 기술한다. "~하면 좋겠다" 수준의 모호한 제안은 finding이 아니다 — **Notes로 기록한다.**
+
+### Notes (개선/범위 밖)
+
+아래는 finding이 아니라 Notes로 누적한다. **자동 수정하지 않고**, Final 출력에 한 번에 모아 보고한다.
+
+- plan 범위 밖이지만 변경 코드 인접에서 발견한 개선 여지
+- design smell, 구조적 어색함, 후속 plan 후보
+- "~하면 좋겠다" 수준의 제안
+- doc drift 중 즉시 깨지지 않는 것
+- out-of-scope이지만 위험도가 보이는 항목
+
+형식: `파일:라인 — 한 줄 메모 (왜 지금 안 고치는지)`
+
+cycle 진행 중 발견하면 메모만 해두고 cycle 출력에는 적지 않는다. Final에서 합쳐 보고.
 
 ### Fix
 
@@ -98,6 +113,7 @@ fix(scope): 구체적 수정 내용
 - 최소 1회 review는 반드시 수행한다. finding이 없으면 review만으로 cycle 완료를 인정한다.
 - 종료 전 가능하면 **full test suite**를 실행한다. 환경 제약(대형 repo, 느린 CI, 부분 checkout)으로 불가하면 변경 범위에 해당하는 test suite로 대체하고, 그 사실을 Final 출력에 명시한다.
 - low severity만 남은 경우 한 번에 모아서 수정하고 종료해도 된다.
+- **Notes는 종료를 막지 않는다.** 누적량이 많아도 보고만 하고 끝낸다.
 
 ## 출력 포맷
 
@@ -113,6 +129,7 @@ fix(scope): 구체적 수정 내용
 ## Final
 - Full verification: (명령 + 결과)
 - Residual risks: (있으면)
+- Notes: (cycle 동안 누적된 개선/범위 밖 항목. 없으면 "없음")
 ```
 
 ## Gotchas
@@ -122,5 +139,5 @@ fix(scope): 구체적 수정 내용
 - **첫 리뷰에서 finding 0개**: plan과 코드를 실제로 라인 단위로 대조했는지 자문한다. finding이 정말 없으면 무리하게 만들지 말되, diff/tests/docs/plan status를 한 번 더 확인한 후에 결론 내린다.
 - **Finding severity 과대평가**: cosmetic 이슈를 medium으로 올리면 수정 시간을 낭비한다. "이걸 안 고치면 사용자가 영향을 받는가?"로 판단.
 - **Fix 도중 새 버그 도입**: 수정 후 targeted verify를 건너뛰고 싶은 유혹이 있다. 반드시 verify를 거친다 — 1줄 수정이라도.
-- **Out-of-scope 오판**: plan에 명시적으로 제외된 항목(auth, UI redesign 등)을 "발견"하고 고치려 하면 review session의 목적을 벗어난다. 시작 시 out-of-scope 목록을 메모하고 매 finding마다 대조한다.
+- **Out-of-scope 오판**: plan에 명시적으로 제외된 항목(auth, UI redesign 등)을 "발견"하고 고치려 하면 review session의 목적을 벗어난다. 시작 시 out-of-scope 목록을 메모하고 매 finding마다 대조한다. 위험도가 보이면 fix 대신 **Notes에 기록**한다.
 - **커밋 단위가 너무 크거나 작음**: 1 finding = 1 commit이 아니다. 한 cycle의 모든 fix를 하나의 커밋으로 묶되, 성격이 완전히 다른 fix(예: 로직 수정 + docs 수정)는 분리한다.
