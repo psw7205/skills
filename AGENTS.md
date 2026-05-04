@@ -16,6 +16,8 @@ custom-skills 레포 작업 시 레포 파일만 수정. 로컬 설치 경로(~/
 
 등록된 스킬 목록은 `.claude-plugin/marketplace.json`의 `skills` 배열을 참조한다. `setup-hooks` 스킬은 guard-untracked 훅을 `~/.claude/settings.json`에 설치/제거한다. 이 훅은 `git clean`, `git checkout .`, `git reset --hard`, `git restore .` 실행 전 auto-stash를 삽입하고, `git push --force`는 deny한다. 참고 파일이나 스크립트가 필요한 경우가 아니면 얕은 구조를 유지.
 
+스킬은 특정 프로젝트의 성공 사례, 로컬 경로, framework 관례를 그대로 고정하지 않는다. 도메인별 판단이 필요한 스킬은 작업 시점에 대상 repo의 실제 파일, 설정, schema, API 관례, runtime evidence를 확인하도록 작성한다. 새 스킬이나 스킬 동작 변경 시 `README.md`와 `.claude-plugin/marketplace.json`을 함께 갱신한다.
+
 ## 빌드, 테스트, 개발 명령어
 
 이 레포에 빌드 파이프라인이나 자동화 테스트 스위트는 없다. 레포 루트에서 경량 검사 명령어를 사용:

@@ -23,7 +23,9 @@
         "./skills/clean-memory",
         "./skills/rn-cdp-bridge",
         "./skills/git-diagnosis",
-        "./skills/plan"
+        "./skills/repo-prd-sync",
+        "./skills/plan",
+        "./skills/api-crud-pattern"
       ]
     }
   ]
