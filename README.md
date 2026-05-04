@@ -17,7 +17,7 @@
 | `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 전체 레퍼런스 (커맨드, 개념, 워크플로우) | `/cmux-help` (수동 트리거) |
-| `setup-hooks` | git 안전 훅 설치/제거 (파괴적 명령 전 auto-stash, force push deny) | "hooks 설치", "guard 설치", "훅 제거" |
+| `setup-hooks` | git 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 | `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log + 네트워크 터미널 브릿지 | "console.log 안 보여", "Metro 로그 안 나와", "RN network debugging" |
@@ -101,7 +101,10 @@ custom-skills/
 │   │   └── scripts/fetch-subs.sh
 │   ├── setup-hooks/
 │   │   ├── SKILL.md
-│   │   └── scripts/guard-untracked.sh
+│   │   └── scripts/
+│   │       ├── guard-untracked.sh
+│   │       ├── guard-untracked-codex.sh
+│   │       └── install-codex-hook.sh
 │   ├── statusline/
 │   │   ├── SKILL.md
 │   │   └── statusline-command.sh
