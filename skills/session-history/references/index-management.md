@@ -13,7 +13,7 @@ touch ~/history/index.jsonl
 
 저장 직후 아래 형식으로 한 줄 append:
 ```jsonl
-{"date":"2026-03-18","time":"14:30","project":"custom-skills","slug":"auth-middleware-decision","path":"~/history/2026-03-18/custom-skills/14-30-auth-middleware-decision.md"}
+{"date":"2026-03-18","time":"14:30","project":"custom-skills","slug":"auth-middleware-decision","path":"~/history/2026/03/18/custom-skills/14-30-auth-middleware-decision.md"}
 ```
 
 ## 이전 기록 활용

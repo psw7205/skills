@@ -43,7 +43,9 @@ description: >
 - **target_date**: 사용자가 날짜를 입력하면 해당 날짜, 없으면 오늘 날짜 (`YYYY-MM-DD`)
   - 예: "세션 정리해줘 2026-03-18" → `2026-03-18`
   - 예: "세션 정리해줘" → 오늘 날짜
-- **저장 경로**: `~/history/{target_date}/{project_name}/{HH-mm}-{summary-slug}.md`
+- **저장 경로**: `~/history/{YYYY}/{MM}/{DD}/{project_name}/{HH-mm}-{summary-slug}.md`
+  - `{YYYY}/{MM}/{DD}`는 `target_date`(YYYY-MM-DD)를 슬래시로 분할한 3단계 디렉토리. 예: `2026-03-18` → `2026/03/18/`
+  - bash 예: `path_dir="${target_date//-/\/}"` 또는 `IFS='-' read -r YYYY MM DD <<< "$target_date"`
 - **summary-slug**: 대화 핵심을 영문 kebab-case로 2-4단어 (예: `auth-middleware-decision`, `api-refactor-feedback`)
 - 디렉토리가 없으면 `mkdir -p`로 생성
 
@@ -56,6 +58,7 @@ description: >
 - **빈 섹션은 생략한다.** 코드 변경이 없었으면 "변경 사항" 섹션을 넣지 않는다. 후속 작업이 없으면 해당 섹션도 생략.
 - **한국어로 작성한다.** 기술 용어, 파일명, 코드는 원문 유지.
 - **전체 30줄 이내.** 긴 세션이라도 핵심만 남긴다.
+- **연속 세션은 같은 문제를 이어서 처리한 경우에만 병합한다.** 같은 프로젝트·같은 날짜라도 의사결정 흐름이 다르면 별도 파일로 분리한다.
 
 ## 출력 포맷
 
@@ -76,8 +79,8 @@ description: >
 3. project_name을 결정한다: `basename $(realpath $PWD)`
 4. 대화 내용을 위 원칙과 포맷에 따라 요약한다
 5. summary-slug를 생성한다 (대화 핵심을 영문 kebab-case 2-4단어)
-6. `mkdir -p ~/history/{target_date}/{project_name}/`
-7. Write 도구로 파일을 저장한다 (제목: `# {project} — {target_date} HH:mm`)
+6. `mkdir -p ~/history/${target_date//-/\/}/{project_name}/`  # 2026-03-18 → 2026/03/18
+7. Write 도구로 파일을 저장한다 (제목: `# {project} — {YYYY-MM-DD HH:mm}`. 파일 제목과 인덱스의 `date` 필드는 슬래시가 아닌 `YYYY-MM-DD` 형식 유지)
 8. 이력 인덱스를 업데이트한다 (아래 "이력 관리" 참조, date 필드에 target_date 사용)
 9. 저장 경로를 사용자에게 알려준다
 
