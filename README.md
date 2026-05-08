@@ -16,7 +16,7 @@
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 돌려", "self-review", "review loop" |
 | `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
-| `cmux-help` | cmux CLI 전체 레퍼런스 (커맨드, 개념, 워크플로우) | `/cmux-help` (수동 트리거) |
+| `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | `/cmux-help` (수동 트리거) |
 | `setup-hooks` | git 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 | `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
@@ -88,11 +88,7 @@ custom-skills/
 │   │   ├── SKILL.md
 │   │   └── references/output-format.md
 │   ├── tmux/SKILL.md
-│   ├── cmux-help/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── commands.md   # 커맨드별 상세 옵션, 엣지케이스
-│   │       └── browser.md    # 브라우저 자동화 상세
+│   ├── cmux-help/SKILL.md
 │   ├── video-subtitle-dl/
 │   │   ├── SKILL.md
 │   │   ├── references/
