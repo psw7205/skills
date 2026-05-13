@@ -25,6 +25,7 @@
 | `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
 | `api-crud-pattern` | API CRUD 작업 전 domain shape, delete/restore, identifier, projection, conflict 정책 점검 | "CRUD API 구현", "API CRUD 검토", "scoped resource" |
+| `worktree-lifecycle` | git worktree lifecycle 4단계(setup/working/prep/cleanup) 식별 + fast-path 결정 트리 + squash 직전 정리 가이드 | "worktree 만들까", "여기서 바로 할까", "main 머지 준비", "worktree 정리" |
 
 ## 설치
 
@@ -116,7 +117,9 @@ custom-skills/
 │   │   └── SKILL.md
 │   ├── repo-prd-sync/
 │   │   └── SKILL.md
-│   └── api-crud-pattern/
+│   ├── api-crud-pattern/
+│   │   └── SKILL.md
+│   └── worktree-lifecycle/
 │       └── SKILL.md
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인

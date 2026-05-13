@@ -25,7 +25,8 @@
         "./skills/git-diagnosis",
         "./skills/repo-prd-sync",
         "./skills/plan",
-        "./skills/api-crud-pattern"
+        "./skills/api-crud-pattern",
+        "./skills/worktree-lifecycle"
       ]
     }
   ]
