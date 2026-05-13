@@ -6,26 +6,55 @@
 
 ## 포함된 스킬
 
+분류는 사람이 탐색하기 좋도록 트리거 맥락 기준으로 묶은 메타데이터다. 실제 자동 트리거는 각 스킬의 `description`이 결정한다.
+
+### Git & 버전 관리
+
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
-| `trace-change-why` | 코드 변경의 WHY(원인, 동기, 판단 근거)를 세션 트랜스크립트에서 추적 | "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?" |
-| `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
-| `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
-| `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
 | `commit-msg` | 커밋 메시지 추천 (실행 안 함) + 가드레일 체크 | "커밋 만들어", "커밋 메시지 추천", "뭐라고 커밋하지" |
+| `setup-hooks` | git 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거" |
+| `trace-change-why` | 코드 변경의 WHY(원인, 동기, 판단 근거)를 세션 트랜스크립트에서 추적 | "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?" |
+| `git-diagnosis` | Git 이력 기반 코드베이스 건강 진단 — 교차 분석으로 고위험 코드 식별 | "프로젝트 분석해줘", "코드베이스 진단", "codebase audit" |
+| `worktree-lifecycle` | git worktree lifecycle 4단계(setup/working/prep/cleanup) 식별 + fast-path 결정 트리 + squash 직전 정리 가이드 | "worktree 만들까", "여기서 바로 할까", "main 머지 준비", "worktree 정리" |
+
+### Workflow & 세션
+
+| 스킬 | 설명 | 트리거 예시 |
+|------|------|------------|
+| `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 돌려", "self-review", "review loop" |
-| `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
+| `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
+| `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
+
+### 개발 환경
+
+| 스킬 | 설명 | 트리거 예시 |
+|------|------|------------|
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | `/cmux-help` (수동 트리거) |
-| `setup-hooks` | git 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
-| `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log + 네트워크 터미널 브릿지 | "console.log 안 보여", "Metro 로그 안 나와", "RN network debugging" |
-| `git-diagnosis` | Git 이력 기반 코드베이스 건강 진단 — 교차 분석으로 고위험 코드 식별 | "프로젝트 분석해줘", "코드베이스 진단", "codebase audit" |
-| `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
-| `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
+
+### 저작 도구
+
+| 스킬 | 설명 | 트리거 예시 |
+|------|------|------------|
+| `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
+| `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
+| `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
+
+### 구현 패턴
+
+| 스킬 | 설명 | 트리거 예시 |
+|------|------|------------|
 | `api-crud-pattern` | API CRUD 작업 전 domain shape, delete/restore, identifier, projection, conflict 정책 점검 | "CRUD API 구현", "API CRUD 검토", "scoped resource" |
-| `worktree-lifecycle` | git worktree lifecycle 4단계(setup/working/prep/cleanup) 식별 + fast-path 결정 트리 + squash 직전 정리 가이드 | "worktree 만들까", "여기서 바로 할까", "main 머지 준비", "worktree 정리" |
+
+### 유틸리티
+
+| 스킬 | 설명 | 트리거 예시 |
+|------|------|------------|
+| `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
 
 ## 설치
 
