@@ -34,7 +34,7 @@ deny() {
 
 backup_reason() {
   local label="$1"
-  printf 'Blocked command "%s". Codex hooks do not rewrite shell commands here. If this command is intentional, first run: git stash push --include-untracked -m "manual backup before %s"; then inspect git stash list and rerun the original command.' "$label" "$label"
+  printf 'Blocked command "%s". Codex hooks do not rewrite shell commands here. If this command is intentional, first run: git stash push --include-untracked -m "manual backup before %s" && git stash apply --index; then verify git stash list and rerun the original command.' "$label" "$label"
 }
 
 # --force-with-lease and --force-if-includes are allowed unless --force is also present.
@@ -50,16 +50,27 @@ if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+clean\b'; then
   deny "git clean" "$(backup_reason "git clean")"
 fi
 
-if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+checkout[[:space:]]+(--[[:space:]]+)?\.([[:space:]]|$)'; then
-  deny "git checkout ." "$(backup_reason "git checkout .")"
-fi
-
 if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+reset[[:space:]]+--hard\b'; then
   deny "git reset --hard" "$(backup_reason "git reset --hard")"
 fi
 
-if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+restore[[:space:]]+(--[[:space:]]+)?\.([[:space:]]|$)'; then
-  deny "git restore ." "$(backup_reason "git restore .")"
+# git restore: --staged/-S 단독이면 안전. --worktree/-W 동반 또는 staged 없으면 deny.
+if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+restore\b'; then
+  has_staged=0
+  has_worktree=0
+  printf '%s' "$CMD" | grep -qE '(^|[[:space:]])(--staged|--cached|-S)([[:space:]]|$)' && has_staged=1
+  printf '%s' "$CMD" | grep -qE '(^|[[:space:]])(--worktree|-W)([[:space:]]|$)' && has_worktree=1
+  if [ "$has_staged" = "0" ] || [ "$has_worktree" = "1" ]; then
+    deny "git restore" "$(backup_reason "git restore")"
+  fi
+fi
+
+# git checkout: 명시적 파일 복원(--, .) 또는 force 플래그
+if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+checkout[[:space:]]+(--[[:space:]]|\.([[:space:]]|$))'; then
+  deny "git checkout (paths)" "$(backup_reason "git checkout (paths)")"
+fi
+if printf '%s' "$CMD" | grep -qE '\bgit[[:space:]]+checkout\b.*(^|[[:space:]])(-f|--force)([[:space:]]|$)'; then
+  deny "git checkout --force" "$(backup_reason "git checkout --force")"
 fi
 
 exit 0

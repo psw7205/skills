@@ -23,14 +23,22 @@ ${CLAUDE_PLUGIN_ROOT}/skills/setup-hooks/scripts/guard-untracked.sh
 
 ### Claude Code
 
+핵심 전략: 파괴적 명령 직전에 `git stash push --include-untracked && git stash apply --index`로 **백업 stash만 만들고 working tree는 즉시 원복**. 원래 명령은 진짜 dirty state에 그대로 실행되어 사용자 의도가 보존되고, stash entry는 복구 지점으로 남는다.
+
 | 명령 | 동작 |
 |------|------|
-| `git clean` | auto-stash 후 실행 |
-| `git checkout .` / `git checkout -- .` | auto-stash 후 실행 |
-| `git reset --hard` | auto-stash 후 실행 |
-| `git restore .` | auto-stash 후 실행 |
+| `git clean` | auto-backup 후 실행 |
+| `git reset --hard` | auto-backup 후 실행 |
+| `git restore .` / `git restore <file>` / `git restore --source=... <file>` | auto-backup 후 실행 |
+| `git restore --staged <file>` / `git restore -S <file>` | 통과 (index만 갱신, worktree 안전) |
+| `git restore --staged --worktree <file>` | auto-backup 후 실행 (worktree 동반) |
+| `git checkout .` / `git checkout -- <file>` | auto-backup 후 실행 |
+| `git checkout -f <branch>` / `git checkout --force ...` | auto-backup 후 실행 |
+| `git checkout <branch>` (DWIM) | 통과 (git이 dirty 충돌 시 거부) |
 | `git push --force` / `git push -f` | deny (차단) |
 | `git push --force-with-lease` | 허용 (안전한 대안) |
+
+복구: `git stash list` → `git stash apply stash@{N}` (백업이 필요할 때만).
 
 ### Codex
 
@@ -39,9 +47,11 @@ Codex 전용 hook은 shell command rewrite를 하지 않는다. 현재 Codex hoo
 | 명령 | 동작 |
 |------|------|
 | `git clean` | deny. 단 `-n`, `--dry-run`, `-i`, `--interactive`는 허용 |
-| `git checkout .` / `git checkout -- .` | deny |
 | `git reset --hard` | deny |
-| `git restore .` / `git restore -- .` | deny |
+| `git restore .` / `git restore <file>` (without `--staged`) | deny |
+| `git restore --staged <file>` | 통과 |
+| `git checkout .` / `git checkout -- <file>` | deny |
+| `git checkout -f <branch>` / `git checkout --force ...` | deny |
 | `git push --force` / `git push -f` | deny |
 | `git push --force-with-lease` | 허용 |
 
