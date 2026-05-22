@@ -36,6 +36,7 @@
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | `/cmux-help` (수동 트리거) |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log + 네트워크 터미널 브릿지 | "console.log 안 보여", "Metro 로그 안 나와", "RN network debugging" |
+| `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
 
 ### 저작 도구
 
@@ -151,7 +152,9 @@ custom-skills/
 │   │   └── SKILL.md
 │   ├── worktree-lifecycle/
 │   │   └── SKILL.md
-│   └── compound/
+│   ├── compound/
+│   │   └── SKILL.md
+│   └── agent-native-audit/
 │       └── SKILL.md
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인

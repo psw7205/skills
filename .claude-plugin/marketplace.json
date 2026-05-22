@@ -27,7 +27,8 @@
         "./skills/plan",
         "./skills/api-crud-pattern",
         "./skills/worktree-lifecycle",
-        "./skills/compound"
+        "./skills/compound",
+        "./skills/agent-native-audit"
       ]
     }
   ]
