@@ -24,6 +24,7 @@
 |------|------|------------|
 | `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 돌려", "self-review", "review loop" |
+| `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
 
@@ -148,7 +149,9 @@ custom-skills/
 │   │   └── SKILL.md
 │   ├── api-crud-pattern/
 │   │   └── SKILL.md
-│   └── worktree-lifecycle/
+│   ├── worktree-lifecycle/
+│   │   └── SKILL.md
+│   └── compound/
 │       └── SKILL.md
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인
