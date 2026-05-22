@@ -59,10 +59,56 @@ review → findings 정리 → fix → targeted verify → commit
 
 ### Review
 
-1. plan 체크리스트 vs 실제 코드 정합성
-2. 구현 파일을 읽고 로직 결함, 누락된 edge case, 계약 불일치를 찾는다
-3. 테스트가 happy path만 커버하는지 확인한다
-4. docs/guide가 구현 상태와 맞는지 확인한다
+첫 cycle은 **다중 페르소나 dispatch**, 이후 cycle은 **narrow follow-up** 모드로 동작한다.
+
+#### Pass A: 다중 페르소나 dispatch (첫 cycle만)
+
+`general-purpose` 서브에이전트를 페르소나별로 **병렬 dispatch**한다 (Agent 도구를 한 메시지에서 다중 호출). 같은 머리로 모든 시각을 동시에 유지하지 않기 위함이다.
+
+**기본 페르소나 5종** (모든 프로젝트):
+
+- `correctness` — 로직 결함, 누락된 edge case, 계약 불일치, happy-path-only 테스트
+- `scope-guardian` — plan 체크리스트 vs 실제 코드 정합성, out-of-scope 침범, finding/Notes 분류
+- `security` — 미검증 입력, secret 노출, 권한 우회, 신뢰 경계
+- `adversarial` — "이 코드를 어떻게 깨뜨릴까" 시각. race, 동시성, 비정상 입력, 부분 실패
+- `coherence` — 기존 스타일/네이밍/구조와의 일관성, docs·guide drift
+
+**프로젝트별 페르소나** (CLAUDE.md / AGENTS.md / package 매니페스트에서 신호 감지 시 추가):
+
+- `performance` — 핫패스, N+1, blocking I/O, allocation
+- `framework-specific` — Rails / Next.js / React Native / Swift 등 프레임워크 footgun
+
+각 페르소나 프롬프트는 `references/personas.md` 참조. 서브에이전트는 SKILL.md를 재로드하지 않으므로 프롬프트는 stateless·self-contained로 전달.
+
+각 페르소나의 출력 포맷 (구조화된 JSON-ish):
+
+```
+[<severity>] <파일:라인> — <문제> | 기대: <기대 동작>
+```
+
+severity는 페르소나가 직접 분류하지 말고 raw finding만 반환하게 한다. severity 분류는 Pass B에서 본 스킬이 일괄 수행.
+
+#### Pass B: merge & dedup
+
+페르소나별 raw finding을 한 곳에 모은 뒤:
+
+1. **dedup** — 같은 파일:라인 ±3 윈도우에서 같은 증상을 가리키는 finding은 1개로 병합. 페르소나 라벨은 `(correctness+adversarial)` 형태로 유지.
+2. **severity 분류** — `Findings 정리` 표 기준으로 critical/high/medium/low 부여.
+3. **Notes 추출** — finding 형태이지만 plan 범위 밖이거나 "~하면 좋겠다" 수준은 Notes로 이동.
+
+페르소나 간 충돌 (예: `security`는 fix 권고, `scope-guardian`은 범위 밖이라 Notes 권고)은 *scope-guardian 우선* — 범위 밖이면 Notes로 가고, 위험도가 보이면 Notes에 위험도를 명시.
+
+#### Pass A (narrow): 후속 cycle
+
+2회차 이후 cycle은 **이전 cycle finding의 fix 결과만** 좁게 review한다. 페르소나 dispatch 없이 본 스킬이 직접 수행:
+
+1. 이전 cycle의 각 finding이 의도대로 해결됐는가
+2. fix가 새 finding(regression 또는 인접 결함)을 만들었는가
+3. plan 체크리스트 상태가 fix로 변했는가 (체크 갱신)
+
+전체 페르소나 재dispatch는 다음 조건에서만:
+- 범위가 크게 확장된 fix가 있었다
+- 페르소나 한 종류가 1회차에서 0 finding을 반환했고, 실제로는 누락이 의심된다
 
 ### Findings 정리
 
@@ -141,3 +187,5 @@ fix(scope): 구체적 수정 내용
 - **Fix 도중 새 버그 도입**: 수정 후 targeted verify를 건너뛰고 싶은 유혹이 있다. 반드시 verify를 거친다 — 1줄 수정이라도.
 - **Out-of-scope 오판**: plan에 명시적으로 제외된 항목(auth, UI redesign 등)을 "발견"하고 고치려 하면 review session의 목적을 벗어난다. 시작 시 out-of-scope 목록을 메모하고 매 finding마다 대조한다. 위험도가 보이면 fix 대신 **Notes에 기록**한다.
 - **커밋 단위가 너무 크거나 작음**: 1 finding = 1 commit이 아니다. 한 cycle의 모든 fix를 하나의 커밋으로 묶되, 성격이 완전히 다른 fix(예: 로직 수정 + docs 수정)는 분리한다.
+- **페르소나 추가의 함정**: 페르소나는 *서로 다른 사각지대*를 보기 위한 것이다. 비슷한 시각의 페르소나를 늘리면 dedup 부담만 커지고 finding 다양성은 오르지 않는다. 5종으로 시작하고, 프로젝트 신호가 있을 때만 1–2종 추가한다.
+- **페르소나 결과를 그대로 finding으로 채택 금지**: dispatch 결과는 *후보 finding*이다. Pass B의 merge·severity 분류·Notes 분리를 거치지 않고 바로 fix로 가면 false positive에 시간을 낭비한다.
