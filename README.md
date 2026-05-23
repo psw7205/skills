@@ -60,6 +60,14 @@
 
 ## 설치
 
+전체 에이전트용 global 설치:
+
+```bash
+npx skills add . -g --all
+```
+
+로컬 스모크 테스트:
+
 ```bash
 npx skills add ./
 ```
@@ -118,7 +126,9 @@ custom-skills/
 │   │       └── checklist.md
 │   ├── self-feedback-loop/
 │   │   ├── SKILL.md
-│   │   └── references/output-format.md
+│   │   └── references/
+│   │       ├── output-format.md
+│   │       └── personas.md
 │   ├── tmux/SKILL.md
 │   ├── cmux-help/SKILL.md
 │   ├── video-subtitle-dl/

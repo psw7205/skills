@@ -5,10 +5,11 @@ description: >
   review-fix-verify-commit 루프. material finding 소진까지 반복한다.
   "self-feedback loop 돌려", "피드백 루프 시작", "review fix commit 반복",
   "구현 결과 검토하고 수정해", "코드 리뷰하고 고치고 커밋까지",
-  "adversarial review", "self-review", "review session 시작",
-  "review loop", "셀프 리뷰", "리뷰 루프", "피드백 루프",
-  "구현 검토해줘", "review and fix", "코드 점검하고 수정해줘"
-  등에서 트리거.
+  "adversarial review and fix", "review and fix", "리뷰하고 고쳐",
+  "review loop 돌려", "셀프 리뷰하고 수정해", "리뷰 루프", "피드백 루프",
+  "코드 점검하고 수정해줘" 등 실행 의도가 명확할 때 트리거.
+  단순 "review", "검토", "구현 검토해줘", "self-review" 같은 read-only
+  요청만으로는 트리거하지 않는다.
 ---
 
 # Self-Feedback Loop
@@ -23,6 +24,7 @@ description: >
 - **plan이 기준이다.** plan에 없는 개선은 자동 수정하지 않는다. plan이나 AGENTS.md에 out-of-scope로 명시된 항목을 미구현이라고 finding 처리하지 않는다.
 - **surgical fix만 한다.** 수정은 finding에 직접 대응하는 범위로 한정한다. 인접 코드 정리, unrelated refactor, 스타일 통일 금지.
 - **단, 시야는 닫지 않는다.** plan 밖 개선 여지, design smell, 범위 밖 위험은 fix 대상이 아니지만 **Notes**로 누적해 Final에서 한 번에 보고한다.
+- **read-only 요청이면 중단한다.** 사용자 요청이 단순 `review`/`검토`/`확인`이면 이 루프를 실행하지 말고, 수정·커밋 없는 read-only review로 전환한다.
 
 ## 시작 절차
 
@@ -59,11 +61,18 @@ review → findings 정리 → fix → targeted verify → commit
 
 ### Review
 
-첫 cycle은 **다중 페르소나 dispatch**, 이후 cycle은 **narrow follow-up** 모드로 동작한다.
+첫 cycle은 **다중 페르소나 dispatch**, 이후 cycle은 **narrow follow-up** 모드로 동작한다. 단, 시작 전에 현재 환경에서 subagent/Agent 도구를 사용할 수 있는지 확인한다.
 
 #### Pass A: 다중 페르소나 dispatch (첫 cycle만)
 
-`general-purpose` 서브에이전트를 페르소나별로 **병렬 dispatch**한다 (Agent 도구를 한 메시지에서 다중 호출). 같은 머리로 모든 시각을 동시에 유지하지 않기 위함이다.
+subagent/Agent 도구를 사용할 수 있으면 `general-purpose` 서브에이전트를 페르소나별로 **병렬 dispatch**한다. 같은 머리로 모든 시각을 동시에 유지하지 않기 위함이다.
+
+subagent/Agent 도구가 없으면 **local fallback**으로 진행한다:
+
+1. 기본 3종(`correctness`, `scope-guardian`, `adversarial`)만 본 세션에서 순차 적용한다.
+2. `security`는 변경이 외부 입력, secret, auth, trust boundary에 닿을 때만 추가한다.
+3. `coherence`는 docs/guide drift나 기존 패턴 변경이 보일 때만 추가한다.
+4. cycle 출력에 `Fallback: local persona review`를 명시한다.
 
 **기본 페르소나 5종** (모든 프로젝트):
 

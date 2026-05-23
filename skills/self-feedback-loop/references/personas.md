@@ -155,3 +155,5 @@ Swift / iOS:
 3. 각 페르소나가 반환한 raw finding을 받아 Pass B(merge/dedup/severity)로 넘김.
 
 dispatch 비용이 큰 환경에서는 *기본 5종 → 3종(correctness/scope-guardian/adversarial)*으로 축소 가능. 단, 보안 민감 프로젝트에서 `security`를 빼지 말 것.
+
+Agent/subagent 도구가 없는 환경에서는 dispatch하지 않는다. 같은 페르소나 본문을 본 세션의 순차 checklist로 사용하고, 결과에 `Fallback: local persona review`를 명시한다.
