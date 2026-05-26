@@ -20,7 +20,7 @@ description: >
 
 이 스킬이 활성되면 아래 모드로 전환한다:
 
-- **review-only 세션이다.** 새 기능 추가, 범위 확장, 설계 재논의를 하지 않는다.
+- **plan-bounded fix 세션이다.** review-fix-verify-commit 루프를 돌리되, 새 기능 추가, 범위 확장, 설계 재논의를 하지 않는다.
 - **plan이 기준이다.** plan에 없는 개선은 자동 수정하지 않는다. plan이나 AGENTS.md에 out-of-scope로 명시된 항목을 미구현이라고 finding 처리하지 않는다.
 - **surgical fix만 한다.** 수정은 finding에 직접 대응하는 범위로 한정한다. 인접 코드 정리, unrelated refactor, 스타일 통일 금지.
 - **단, 시야는 닫지 않는다.** plan 밖 개선 여지, design smell, 범위 밖 위험은 fix 대상이 아니지만 **Notes**로 누적해 Final에서 한 번에 보고한다.
@@ -92,10 +92,10 @@ subagent/Agent 도구가 없으면 **local fallback**으로 진행한다:
 각 페르소나의 출력 포맷 (구조화된 JSON-ish):
 
 ```
-[<severity>] <파일:라인> — <문제> | 기대: <기대 동작>
+[<severity-hint>] <파일:라인> — <문제> | 기대: <기대 동작>
 ```
 
-severity는 페르소나가 직접 분류하지 말고 raw finding만 반환하게 한다. severity 분류는 Pass B에서 본 스킬이 일괄 수행.
+`severity-hint`는 참고 신호다. 페르소나는 severity를 확정하지 말고 finding 후보와 hint만 반환한다. 최종 severity 분류는 Pass B에서 본 스킬이 일괄 수행.
 
 #### Pass B: merge & dedup
 

@@ -5,30 +5,71 @@
   },
   "plugins": [
     {
-      "name": "custom-tools",
+      "name": "git-version-control",
+      "description": "Git, commit, history, hook, and worktree workflow skills.",
       "source": "./",
       "strict": false,
       "skills": [
         "./skills/commit-msg",
+        "./skills/setup-hooks",
+        "./skills/trace-change-why",
+        "./skills/git-diagnosis",
+        "./skills/worktree-lifecycle"
+      ]
+    },
+    {
+      "name": "workflow-session",
+      "description": "Planning, review loops, session history, and knowledge capture skills.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/plan",
         "./skills/self-feedback-loop",
+        "./skills/compound",
         "./skills/session-history",
-        "./skills/skill-guide",
+        "./skills/repo-prd-sync"
+      ]
+    },
+    {
+      "name": "development-environment",
+      "description": "Terminal, statusline, runtime debugging, and agent-readiness skills.",
+      "source": "./",
+      "strict": false,
+      "skills": [
         "./skills/tmux",
         "./skills/cmux-help",
-        "./skills/trace-change-why",
-        "./skills/prompt",
-        "./skills/video-subtitle-dl",
         "./skills/statusline",
-        "./skills/setup-hooks",
-        "./skills/clean-memory",
         "./skills/rn-cdp-bridge",
-        "./skills/git-diagnosis",
-        "./skills/repo-prd-sync",
-        "./skills/plan",
-        "./skills/api-crud-pattern",
-        "./skills/worktree-lifecycle",
-        "./skills/compound",
         "./skills/agent-native-audit"
+      ]
+    },
+    {
+      "name": "authoring-tools",
+      "description": "Prompt, skill authoring, and memory cleanup skills.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/prompt",
+        "./skills/skill-guide",
+        "./skills/clean-memory"
+      ]
+    },
+    {
+      "name": "implementation-patterns",
+      "description": "Reusable implementation pattern skills.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/api-crud-pattern"
+      ]
+    },
+    {
+      "name": "utilities",
+      "description": "General-purpose utility skills.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/video-subtitle-dl"
       ]
     }
   ]

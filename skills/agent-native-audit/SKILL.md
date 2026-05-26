@@ -68,12 +68,14 @@ description: >
 
 위험 명령에 대한 가드레일이 설치됐는가.
 
+점수는 먼저 repo-local evidence로 산정한다. home-directory hook은 현재 operator 환경의 보정 근거로만 쓰고, repo가 공유한 readiness 점수를 올리는 단독 근거로 사용하지 않는다.
+
 확인 신호:
-- `.claude/settings.json` 또는 `~/.claude/settings.json` hook (auto-stash, force-push deny 등)
-- `.codex/hooks.json` (Codex deny-only guard)
+- Repo-local: `.claude/settings.json`, `.codex/hooks.json`, `.githooks/` 등 공유 hook 설정
+- Operator-local: `~/.claude/settings.json`, `~/.codex/hooks.json` hook (auto-stash, force-push deny, Codex deny-only guard 등)
 - pre-commit / pre-push hook
 - `.gitignore`가 secret/build artifact를 충분히 가리는가
-- 점수 감점: 가드 없음, 또는 hook은 있지만 우회가 너무 쉬움
+- 점수 감점: repo-local 가드 없음, 또는 hook은 있지만 우회가 너무 쉬움
 
 ### 5. Log / Runtime Access
 

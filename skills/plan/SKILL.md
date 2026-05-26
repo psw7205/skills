@@ -51,7 +51,7 @@ description: >
 
 ### 저장 후 자동 Review
 
-저장 직후 Agent 도구로 `general-purpose` 서브에이전트를 1회 dispatch한다. 이 dispatch는 생략하지 않는다 — 같은 머리로 작성·비판을 동시에 하지 않기 위함. 서브에이전트는 SKILL.md를 재로드하지 않으므로 아래 프롬프트만으로 동작한다.
+저장 직후 가능하면 Agent 도구로 `general-purpose` 서브에이전트를 1회 dispatch한다. 이 review는 생략하지 않는다 — 같은 머리로 작성·비판을 동시에 하지 않기 위함. 서브에이전트는 SKILL.md를 재로드하지 않으므로 아래 프롬프트만으로 동작한다.
 
 서브에이전트 프롬프트 (그대로 또는 거의 그대로 전달):
 
@@ -74,6 +74,8 @@ verdict 룰:
 
 plan 파일 경로: <절대경로>
 ```
+
+Agent/subagent 도구가 없는 환경에서는 같은 checklist를 본 세션에서 다시 적용한다. 결과 첫 줄에 `Fallback: local plan review`를 명시하고, plan 본문을 처음 보는 reviewer처럼 다시 읽은 뒤 의심점만 반환한다.
 
 결과를 사용자에게 그대로 전달하고 종료. 🔴여도 자동 재작성 없음. 다음 행동(수정·진행·무시)은 사용자 판단.
 
