@@ -39,6 +39,7 @@
         "./skills/tmux",
         "./skills/cmux-help",
         "./skills/statusline",
+        "./skills/setup-global-config",
         "./skills/rn-cdp-bridge",
         "./skills/agent-native-audit"
       ]

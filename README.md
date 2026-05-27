@@ -35,6 +35,7 @@
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | `/cmux-help` (수동 트리거) |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
+| `setup-global-config` | 팀 공용 글로벌 에이전트 설정을 `~/.claude/CLAUDE.md` + `~/.codex/AGENTS.md`에 설치/제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log + 네트워크 터미널 브릿지 | "console.log 안 보여", "Metro 로그 안 나와", "RN network debugging" |
 | `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
 
@@ -146,6 +147,9 @@ custom-skills/
 │   ├── statusline/
 │   │   ├── SKILL.md
 │   │   └── statusline-command.sh
+│   ├── setup-global-config/
+│   │   ├── SKILL.md
+│   │   └── references/global-config.md
 │   ├── rn-cdp-bridge/
 │   │   ├── SKILL.md
 │   │   ├── scripts/cdp-console.mjs
