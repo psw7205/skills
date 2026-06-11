@@ -44,6 +44,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
+| `humanizer` | 문장과 글의 AI 티 검사 + 한국어 번역투/문체 rewrite | "문장 검사", "AI 티 제거", "번역투 고쳐", "humanize this" |
 | `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
 | `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
 
@@ -125,6 +126,11 @@ custom-skills/
 │   │       ├── structure.md
 │   │       ├── techniques.md
 │   │       └── checklist.md
+│   ├── humanizer/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── patterns.md
+│   │       └── korean-patterns.md
 │   ├── self-feedback-loop/
 │   │   ├── SKILL.md
 │   │   └── references/

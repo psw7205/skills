@@ -46,11 +46,12 @@
     },
     {
       "name": "authoring-tools",
-      "description": "Prompt, skill authoring, and memory cleanup skills.",
+      "description": "Prompt, writing, skill authoring, and memory cleanup skills.",
       "source": "./",
       "strict": false,
       "skills": [
         "./skills/prompt",
+        "./skills/humanizer",
         "./skills/skill-guide",
         "./skills/clean-memory"
       ]
