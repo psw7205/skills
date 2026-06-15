@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-custom-skills 레포 작업 시 레포 파일만 수정. 로컬 설치 경로(~/.claude/skills/ 등)에 cp, 동기화, 직접 수정 금지. 설치/배포는 사용자가 관리.
+custom-skills 레포 작업 시 레포 파일만 수정한다. 로컬 설치 경로(`~/.claude/skills/`, `~/.agents/skills/` 등)에 직접 `cp`·동기화·수동 편집은 금지한다. 설치·업데이트가 필요하면 표준 도구 `npx skills add ./`(개별 스킬은 `--skill <name>`, 전역은 `-g`)로 수행한다.
 
 
 ## 프로젝트 구조
