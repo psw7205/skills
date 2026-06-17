@@ -11,6 +11,7 @@
       "strict": false,
       "skills": [
         "./skills/commit-msg",
+        "./skills/commit-regroup",
         "./skills/setup-hooks",
         "./skills/trace-change-why",
         "./skills/git-diagnosis",

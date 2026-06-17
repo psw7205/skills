@@ -13,6 +13,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `commit-msg` | 커밋 메시지 추천 (실행 안 함) + 가드레일 체크 | "커밋 만들어", "커밋 메시지 추천", "뭐라고 커밋하지" |
+| `commit-regroup` | push 전 로컬 커밋을 논리 단위로 재구성 (soft-reset 재배치 + 트리 동일성 검증) | "커밋 묶어줘", "로컬 커밋 grouping", "push 전에 커밋 정리해줘" |
 | `setup-hooks` | git 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거" |
 | `trace-change-why` | 코드 변경의 WHY(원인, 동기, 판단 근거)를 세션 트랜스크립트에서 추적 | "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?" |
 | `git-diagnosis` | Git 이력 기반 코드베이스 건강 진단 — 교차 분석으로 고위험 코드 식별 | "프로젝트 분석해줘", "코드베이스 진단", "codebase audit" |
