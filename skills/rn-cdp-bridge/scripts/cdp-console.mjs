@@ -4,7 +4,8 @@
  * CDP Console + Network Bridge for React Native Metro
  *
  * Metro InspectorProxy에 CDP WebSocket으로 연결하여
- * Runtime.consoleAPICalled / Network.* 이벤트를 터미널에 스트리밍한다.
+ * Runtime.consoleAPICalled / Runtime.exceptionThrown / Network.* 이벤트를
+ * 터미널에 스트리밍한다.
  *
  * Usage:
  *   node cdp-console.mjs [options]
@@ -155,6 +156,17 @@ function printNetworkFailed(params) {
   );
 }
 
+function printException(params) {
+  const d = params.exceptionDetails || {};
+  const desc =
+    d.exception?.description || d.exception?.value || d.text || "Uncaught exception";
+  const frame = d.stackTrace?.callFrames?.[0];
+  const loc = frame
+    ? `${DIM}${frame.url?.split("/").pop()}:${frame.lineNumber}${RESET}`
+    : "";
+  console.log(`${LEVEL_COLORS.error}[EXC  ]${RESET} ${desc} ${loc}`);
+}
+
 // -- CDP connection ----------------------------------------------------------
 
 let msgId = 0;
@@ -194,6 +206,9 @@ function connect(wsUrl) {
       switch (msg.method) {
         case "Runtime.consoleAPICalled":
           printConsole(msg.params);
+          break;
+        case "Runtime.exceptionThrown":
+          printException(msg.params);
           break;
         case "Network.requestWillBeSent":
           printNetworkRequest(msg.params);
