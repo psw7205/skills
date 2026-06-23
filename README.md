@@ -27,6 +27,7 @@
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 시작", "리뷰하고 고쳐", "review and fix" |
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
+| `session-bridge` | Claude Code/Codex CLI transcript를 session id로 찾아 handoff 요약 작성 | "claude 세션 이어서", "codex session handoff" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
 
 ### 개발 환경
@@ -121,6 +122,9 @@ custom-skills/
 │   ├── trace-change-why/
 │   │   ├── SKILL.md
 │   │   └── scripts/find-session.sh
+│   ├── session-bridge/
+│   │   ├── SKILL.md
+│   │   └── scripts/find-transcript.sh
 │   ├── prompt/
 │   │   ├── SKILL.md
 │   │   └── references/
