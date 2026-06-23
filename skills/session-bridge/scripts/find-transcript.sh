@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# session-bridge: Claude Code 또는 Codex CLI transcript 파일을 찾는다.
+# session-bridge: Claude Code, Codex CLI, OpenCode transcript/session data를 찾는다.
 # Usage:
-#   find-transcript.sh locate [auto|claude|claude-projects|claude-transcripts|codex] <session-id-or-fragment>
+#   find-transcript.sh locate [auto|claude|claude-projects|claude-transcripts|codex|opencode] <session-id-or-fragment>
+#   find-transcript.sh export opencode <session-id>
 #   find-transcript.sh grep-file <file-pattern> [project-dir]
-#   find-transcript.sh [auto|claude|codex] <session-id-or-fragment>  # locate 호환 호출
+#   find-transcript.sh [auto|claude|codex|opencode] <session-id-or-fragment>  # locate 호환 호출
 #   find-transcript.sh <session-id-or-fragment>                      # locate auto 호환 호출
 
 set -euo pipefail
@@ -11,9 +12,10 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 Usage:
-  find-transcript.sh locate [auto|claude|claude-projects|claude-transcripts|codex] <session-id-or-fragment>
+  find-transcript.sh locate [auto|claude|claude-projects|claude-transcripts|codex|opencode] <session-id-or-fragment>
+  find-transcript.sh export opencode <session-id>
   find-transcript.sh grep-file <file-pattern> [project-dir]
-  find-transcript.sh [auto|claude|codex] <session-id-or-fragment>
+  find-transcript.sh [auto|claude|codex|opencode] <session-id-or-fragment>
   find-transcript.sh <session-id-or-fragment>
 USAGE
 }
@@ -22,6 +24,8 @@ CLAUDE_BASE="${CLAUDE_HOME:-$HOME/.claude}"
 CLAUDE_PROJECTS_ROOT="$CLAUDE_BASE/projects"
 CLAUDE_TRANSCRIPTS_ROOT="$CLAUDE_BASE/transcripts"
 CODEX_ROOT="${CODEX_HOME:-$HOME/.codex}/sessions"
+OPENCODE_DATA_ROOT="${OPENCODE_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/opencode}"
+OPENCODE_DB_DEFAULT="$OPENCODE_DATA_ROOT/opencode.db"
 
 COMMAND="locate"
 AGENT="auto"
@@ -47,6 +51,15 @@ case "$1" in
     AGENT="$2"
     QUERY="$3"
     ;;
+  export)
+    COMMAND="export"
+    if [[ $# -ne 3 ]]; then
+      usage
+      exit 2
+    fi
+    AGENT="$2"
+    QUERY="$3"
+    ;;
   grep-file)
     COMMAND="grep-file"
     if [[ $# -lt 2 || $# -gt 3 ]]; then
@@ -56,7 +69,7 @@ case "$1" in
     QUERY="$2"
     PROJECT_DIR="${3:-$PWD}"
     ;;
-  auto|claude|claude-projects|claude-transcripts|codex)
+  auto|claude|claude-projects|claude-transcripts|codex|opencode)
     COMMAND="locate"
     if [[ $# -ne 2 ]]; then
       usage
@@ -77,9 +90,9 @@ case "$1" in
 esac
 
 case "$AGENT" in
-  auto|claude|claude-projects|claude-transcripts|codex) ;;
+  auto|claude|claude-projects|claude-transcripts|codex|opencode) ;;
   *)
-    echo "ERROR: agent must be auto, claude, claude-projects, claude-transcripts, or codex: $AGENT" >&2
+    echo "ERROR: agent must be auto, claude, claude-projects, claude-transcripts, codex, or opencode: $AGENT" >&2
     exit 2
     ;;
 esac
@@ -98,6 +111,58 @@ emit_match() {
   bytes="$(wc -c < "$file" | tr -d ' ')"
   lines="$(wc -l < "$file" | tr -d ' ')"
   printf '%s\t%s\t%s bytes\t%s lines\t%s\n' "$source" "$file" "$bytes" "$lines" "$reason"
+}
+
+emit_opencode_match() {
+  local session_id="$1"
+  local title="$2"
+  local directory="$3"
+  local updated="$4"
+  local db="$5"
+  printf 'opencode\t%s\tsession\tupdated=%s\tdirectory=%s\ttitle=%s\tdb=%s\n' \
+    "$session_id" "$updated" "$directory" "$title" "$db"
+}
+
+sqlite_literal() {
+  printf "'%s'" "$(printf '%s' "$1" | sed "s/'/''/g")"
+}
+
+opencode_db_candidates() {
+  if [[ -n "${OPENCODE_DB:-}" ]]; then
+    printf '%s\n' "$OPENCODE_DB"
+    return 0
+  fi
+
+  printf '%s\n' "$OPENCODE_DB_DEFAULT"
+  printf '%s\n' "$HOME/Library/Application Support/opencode/opencode.db"
+  printf '%s\n' "$HOME/.opencode/opencode.db"
+}
+
+find_opencode_matches() {
+  command -v sqlite3 >/dev/null 2>&1 || return 0
+
+  local needle
+  needle="$(sqlite_literal "$QUERY")"
+
+  opencode_db_candidates | while IFS= read -r db; do
+    [[ -n "$db" && -f "$db" ]] || continue
+    sqlite3 -readonly -separator $'\t' "$db" "
+      select
+        id,
+        replace(coalesce(nullif(title, ''), '(untitled)'), char(9), ' '),
+        replace(coalesce(nullif(directory, ''), '(unknown)'), char(9), ' '),
+        datetime(time_updated / 1000, 'unixepoch', 'localtime')
+      from session
+      where id like '%' || $needle || '%'
+         or title like '%' || $needle || '%'
+         or directory like '%' || $needle || '%'
+      order by time_updated desc
+      limit 20;
+    " 2>/dev/null | while IFS=$'\t' read -r session_id title directory updated; do
+      [[ -n "$session_id" ]] || continue
+      emit_opencode_match "$session_id" "$title" "$directory" "$updated" "$db"
+    done
+  done
 }
 
 stat_mtime() {
@@ -154,6 +219,7 @@ locate_name_matches() {
       find_by_name_one "claude-projects" "$CLAUDE_PROJECTS_ROOT"
       find_by_name_one "claude-transcripts" "$CLAUDE_TRANSCRIPTS_ROOT"
       find_by_name_one "codex" "$CODEX_ROOT"
+      find_opencode_matches
       ;;
     claude)
       find_by_name_one "claude-projects" "$CLAUDE_PROJECTS_ROOT"
@@ -168,6 +234,9 @@ locate_name_matches() {
     codex)
       find_by_name_one "codex" "$CODEX_ROOT"
       ;;
+    opencode)
+      find_opencode_matches
+      ;;
   esac
 }
 
@@ -177,6 +246,7 @@ locate_content_matches() {
       find_by_content_one "claude-projects" "$CLAUDE_PROJECTS_ROOT"
       find_by_content_one "claude-transcripts" "$CLAUDE_TRANSCRIPTS_ROOT"
       find_by_content_one "codex" "$CODEX_ROOT"
+      find_opencode_matches
       ;;
     claude)
       find_by_content_one "claude-projects" "$CLAUDE_PROJECTS_ROOT"
@@ -190,6 +260,9 @@ locate_content_matches() {
       ;;
     codex)
       find_by_content_one "codex" "$CODEX_ROOT"
+      ;;
+    opencode)
+      find_opencode_matches
       ;;
   esac
 }
@@ -297,6 +370,25 @@ run_locate() {
   printf '%s\n' "$results"
 }
 
+run_export() {
+  case "$AGENT" in
+    opencode)
+      if ! command -v opencode >/dev/null 2>&1; then
+        echo "ERROR: opencode command not found" >&2
+        exit 1
+      fi
+      if ! opencode export "$QUERY" --sanitize 2>/dev/null; then
+        echo "ERROR: opencode export failed for '$QUERY'" >&2
+        exit 1
+      fi
+      ;;
+    *)
+      echo "ERROR: export currently supports only opencode" >&2
+      exit 2
+      ;;
+  esac
+}
+
 run_grep_file() {
   local files=""
   local dirs
@@ -342,6 +434,9 @@ EOF_FILES
 case "$COMMAND" in
   locate)
     run_locate
+    ;;
+  export)
+    run_export
     ;;
   grep-file)
     run_grep_file

@@ -20,7 +20,7 @@
     },
     {
       "name": "workflow-session",
-      "description": "Planning, review loops, session history, and knowledge capture skills.",
+      "description": "Planning, review loops, session history, handoff, and knowledge capture skills.",
       "source": "./",
       "strict": false,
       "skills": [
