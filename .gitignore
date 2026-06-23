@@ -8,3 +8,7 @@ Thumbs.db
 
 # Claude
 .claude/
+
+# Skills CLI
+.agents/
+skills-lock.json
