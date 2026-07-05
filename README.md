@@ -24,6 +24,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
+| `codebase-review` | 전체 코드베이스를 다축(구조·리팩토링·성능·보안·테스트 등)으로 훑는 read-only 리뷰 → 개선은 self-feedback-loop로 위임 | "코드베이스 전체 리뷰해줘", "리팩토링 관점에서 봐줘", "코드 개선점 찾아줘" |
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 시작", "리뷰하고 고쳐", "review and fix" |
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
