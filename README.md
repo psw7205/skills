@@ -38,7 +38,7 @@
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | "cmux 사용법", "cmux 설정", "cmux 브라우저", "cmux sidebar" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
-| `setup-global-config` | 팀 공용 글로벌 에이전트 설정을 `~/.claude/CLAUDE.md` + `~/.codex/AGENTS.md`에 설치/제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
+| `setup-global-config` | tool-agnostic 공통 원칙을 Claude Code와 Codex에 byte-identical하게 설치·검증·제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log·네트워크 브릿지 + release 크래시를 debug+Metro로 진단 | "console.log 안 보여", "Metro 로그 안 나와", "release 크래시가 안 잡혀", "화면 진입하면 죽어" |
 | `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
 

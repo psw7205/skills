@@ -1,8 +1,8 @@
 ---
 name: setup-global-config
 description: >
-  팀 공용 글로벌 에이전트 설정(CLAUDE.md / AGENTS.md)을 Claude Code와 Codex에 설치하거나 제거하는 스킬.
-  Audience/Tone, Execution Boundary, Inspect-Don't-Ask, Git Safety, Commit Messages 등 공통 규칙을 담는다.
+  팀 공용 글로벌 에이전트 설정(CLAUDE.md / AGENTS.md)을 Claude Code와 Codex에 설치, 검증, 제거하는 스킬.
+  두 대상에 byte-identical한 tool-agnostic 원칙을 적용하고 기존 사용자 설정은 backup으로 보호한다.
   "글로벌 설정 설치", "global config 설치", "공용 CLAUDE.md 설치", "팀 글로벌 규칙 적용",
   "global CLAUDE.md AGENTS.md 설치", "에이전트 공통 규칙 설치", "글로벌 설정 제거",
   "install global config", "setup global config", "uninstall global config" 등에서 트리거.
@@ -10,58 +10,76 @@ description: >
 
 # setup-global-config
 
-이 플러그인에 번들된 팀 공용 글로벌 설정을 사용자의 에이전트 설정 파일에 설치하거나 제거한다.
-
-설치하는 사람마다 OS·런타임·이미 가진 글로벌 설정이 다르다. 환경을 가정하지 말고, 아래 절차를 따르되 기존 설정 충돌·외부 종속성은 그 환경에서 직접 확인해 판단한다.
+번들된 공통 원칙을 Claude Code와 Codex의 글로벌 지침 파일에 byte-identical하게 설치하거나 제거한다. 기존 사용자 설정을 먼저 비교하고 backup한 뒤 변경한다.
 
 ## 대상 파일
 
 | 에이전트 | 설치 위치 | 비고 |
 |----------|-----------|------|
-| Claude Code | `~/.claude/CLAUDE.md` | 세션 시작 시 자동 로드되는 글로벌 메모리 |
+| Claude Code | `~/.claude/CLAUDE.md` | 세션 시작 시 로드되는 글로벌 지침 |
 | Codex | `~/.codex/AGENTS.md` | Codex가 읽는 글로벌 지침 |
 
-두 파일은 **동일한 내용**을 받는다. 사용자가 특정 에이전트(`Claude`, `Codex`)만 지정하면 그쪽만 설치한다. 지정이 없으면 두 곳 모두 설치한다.
+사용자가 특정 에이전트만 지정하면 그 대상만 처리한다. 지정이 없으면 둘 다 처리한다. 설치된 모든 대상은 canonical과 byte-identical해야 한다.
 
 ## Canonical 소스
 
-```
+이 `SKILL.md`를 기준으로 `references/global-config.md`를 resolve한다. 설치된 대상 파일이나 다른 agent의 글로벌 파일을 source로 삼지 않는다.
+
+Claude plugin runtime에서 같은 파일은 다음 경로다.
+
+```text
 ${CLAUDE_PLUGIN_ROOT}/skills/setup-global-config/references/global-config.md
 ```
 
-이 파일이 single source of truth다. 대상 파일은 항상 이 내용으로 맞춘다.
+Canonical은 두 agent가 공통으로 해석할 tool-agnostic 원칙만 소유한다. Agent별 tool 호출, model alias, hook 동작, browser CLI command catalog는 넣지 않는다.
 
 ## 설치 절차
 
-각 대상 파일에 대해:
+각 대상에 다음 절차를 적용한다.
 
-1. canonical 소스를 읽는다.
-2. 대상 파일이 **없으면** canonical 내용을 그대로 쓴다.
-3. 대상 파일이 있고 canonical과 **byte-identical**이면 이미 설치됨 — skip (idempotent).
-4. 대상 파일이 있고 **다르면** 사용자가 가진 기존 글로벌 설정이다. 무단 덮어쓰기 금지:
-   - 차이를 요약해 보여준다.
-   - 기존 파일을 `<file>.bak.<timestamp>`로 백업한다.
-   - 덮어쓸지 확인받은 뒤 canonical 내용을 쓴다.
-   - 백업 경로를 알려준다.
+1. Canonical 파일을 끝까지 읽고 source path를 고정한다.
+2. 대상이 없으면 parent directory를 만든 뒤 canonical bytes를 그대로 복사한다.
+3. 대상이 있으면 `cmp -s "$canonical" "$target"`으로 비교한다.
+   - Exit `0`: 이미 설치됨. 변경하지 않는다.
+   - Exit `1`: 차이를 요약하고 덮어쓰기 전에 사용자 승인을 받는다.
+   - Exit `2`: path·permission 오류를 해결하거나 blocker로 보고한다.
+4. 덮어쓰기가 승인되면 먼저 기존 파일을 `<target>.bak.<timestamp>`로 `cp -p` backup한다. Timestamp는 `date +%Y%m%dT%H%M%S`처럼 파일명에 안전한 형식을 쓴다.
+5. Markdown을 재생성하지 말고 canonical 파일 자체를 복사한다.
+6. 모든 대상에 `cmp -s "$canonical" "$target"`을 다시 실행한다. 하나라도 다르면 설치 성공을 보고하지 않는다.
+7. Backup 경로와 검증 결과를 보고하고, 새 세션부터 적용된다고 안내한다.
 
-설치 후 안내: 설정은 **새 세션부터** 적용된다. Claude Code / Codex 재시작 필요.
+## 역할 경계
 
-## 외부 종속성 (필요 시 설치하는 agent가 판단)
+Canonical 설치와 함께 다른 도구를 자동 설치하거나 설정하지 않는다.
 
-이 설정 본문은 아래 외부 요소를 전제로 한다. 환경별로 유무가 다르므로 자동 감지/설치는 하지 않는다. 설정을 설치하는 agent가 자기 환경을 보고 필요하면 갖춘다.
-
-- **`agent-browser`** — "Browser Automation" 섹션이 참조하는 web automation CLI (npm: "Browser automation CLI for AI agents"). 브라우저 자동화를 실제로 쓸 거면 PATH에 있어야 한다. 없으면 글로벌 설치(`npm i -g agent-browser`)나 즉석 실행(`npx agent-browser`) 중 환경에 맞게 선택. 안 쓸 거면 무시해도 무방 — 해당 섹션은 지침일 뿐 런타임 강제는 아니다.
-- **`guard-untracked.sh` git 안전 훅** — "Git Safety" 섹션은 이 훅으로 auto-stash / force-push deny가 강제된다고 전제한다. 훅 자체는 이 설정에 포함되지 않는다. 동작까지 원하면 같은 플러그인의 `setup-hooks` 스킬로 별도 설치한다.
+- Git hook 설치·제거와 hook별 동작은 `setup-hooks` skill이 소유한다.
+- Browser automation 절차는 설치된 browser skill과 현재 CLI의 live help가 소유한다.
+- Model 선택, subagent runtime option, 질문 UI와 tool schema는 현재 agent platform의 설정과 tool instructions가 소유한다.
+- Repo별 commit, test, deploy, worktree 절차는 가장 가까운 repo 지침이 소유한다.
 
 ## 제거 절차
 
-"글로벌 설정 제거" 요청 시:
+1. 대상과 canonical을 `cmp -s`로 비교한다.
+2. 대상이 canonical과 같으면 설치 전 backup 후보를 확인한다.
+   - 복원할 backup이 명확하면 사용자에게 경로를 보여주고 복원한다.
+   - 복원할 backup이 없으면 제거 요청 범위에서 대상 파일을 삭제한다.
+3. 대상이 canonical과 다르면 설치 후 사용자 수정일 수 있으므로 삭제하거나 덮어쓰지 않는다. 차이와 `unresolved` 사유를 보고한다.
+4. 복원 또는 삭제 결과를 filesystem inspection으로 검증한다.
 
-1. 대상 파일이 canonical과 동일하면 삭제하거나, 설치 직전 백업(`<file>.bak.<timestamp>`)이 있으면 그걸로 복원한다.
-2. 백업이 없으면 무단 삭제하지 말고 사용자에게 어떻게 할지 확인한다.
+## 검증
+
+```bash
+cmp -s "$canonical" "$target"
+```
+
+- 설치: 각 대상의 exit status가 `0`인지 확인한다.
+- 제거: 대상이 사라졌거나 선택한 backup과 byte-identical한지 확인한다.
+- Repo에서 이 skill을 수정할 때는 frontmatter, relative path, canonical의 machine-local absolute path 부재, README·marketplace 등록을 함께 확인한다.
 
 ## Gotchas
 
-- `CLAUDE.md`와 `~/.codex/AGENTS.md`는 자동 로드 글로벌 설정 — 설치/제거 후 반드시 새 세션에서 확인. 현재 세션엔 반영 안 된다.
-- 4번(기존 설정 상이) 경로에서 백업 없이 덮어쓰면 사용자의 개인 글로벌 규칙이 사라진다. 차이가 사소해 보여도 백업은 항상 만든다.
-- canonical 본문이 참조하는 `~/...` 경로(`~/.claude/settings.json` 등)는 관례적 설정 경로다. 이 스킬을 수정할 때 본문에 실제 machine-local 절대경로(`/Users/...`)를 넣지 말 것 — 레포 "No Local Paths" 규칙 대상이다.
+- `diff`가 비어 보이는 것과 byte identity는 다르다. Newline·encoding 차이를 포함해 `cmp`로 최종 판정한다.
+- 기존 대상이 다를 때 install 요청만으로 overwrite 승인을 추론하지 않는다. 사용자 작성 글로벌 규칙을 잃을 수 있으므로 backup 전 차이를 보여준다.
+- Backup 없이 overwrite하거나, 수정된 대상 파일을 uninstall 과정에서 삭제하지 않는다.
+- `~/.claude/CLAUDE.md`와 `~/.codex/AGENTS.md`는 현재 세션에 소급 적용되지 않는다. 새 세션에서 확인한다.
+- Tracked 문서에 실제 machine-local absolute path를 기록하지 않는다.
