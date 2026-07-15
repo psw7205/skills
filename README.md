@@ -56,6 +56,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `api-crud-pattern` | API CRUD 작업 전 domain shape, delete/restore, identifier, projection, conflict 정책 점검 | "CRUD API 구현", "API CRUD 검토", "scoped resource" |
+| `test-code-guide` | 테스트 3모드(설계 점검·작성 규범·리뷰) — 구현 미러링, 무의미 커버리지, 비결정성, 테스트 간 결합 방지 | "테스트 짜줘", "테스트 코드 리뷰해줘", "write tests" |
 
 ### 유틸리티
 
@@ -119,6 +120,9 @@ custom-skills/
 │   │   ├── SKILL.md
 │   │   └── references/guide.md
 │   ├── commit-msg/SKILL.md
+│   ├── commit-regroup/
+│   │   ├── SKILL.md
+│   │   └── scripts/regroup.sh
 │   ├── session-history/SKILL.md
 │   ├── trace-change-why/
 │   │   ├── SKILL.md
@@ -142,6 +146,13 @@ custom-skills/
 │   │   └── references/
 │   │       ├── output-format.md
 │   │       └── personas.md
+│   ├── codebase-review/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── survey-checklist.md
+│   │       ├── security-rulesets.md
+│   │       └── false-positives.md
+│   ├── clean-memory/SKILL.md
 │   ├── tmux/SKILL.md
 │   ├── cmux-help/SKILL.md
 │   ├── video-subtitle-dl/
@@ -176,6 +187,11 @@ custom-skills/
 │   │   └── SKILL.md
 │   ├── api-crud-pattern/
 │   │   └── SKILL.md
+│   ├── test-code-guide/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── test-design-techniques.md
+│   │       └── automation-quality.md
 │   ├── worktree-lifecycle/
 │   │   └── SKILL.md
 │   ├── compound/

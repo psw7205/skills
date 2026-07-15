@@ -136,6 +136,7 @@ diff/PR 단위 리뷰가 아니라 **코드베이스 전반**을 대상으로 �
 
 - **git-diagnosis** — git 이력으로 핫스팟·소유권 공백 진단. "어디를 볼지" 단계. 맵핑에서 활용.
 - **self-feedback-loop** — plan 기준 최근 변경을 review-fix-verify-commit. 이 스킬의 개선 위임처.
+- **test-code-guide** — 테스트 스위트 심층 리뷰(구현 미러링·flaky·격리)와 작성 규범. 테스트 축 발견을 깊게 팔 때의 위임처.
 - **compound** — 리뷰 학습을 `docs/solutions/`에 자산화. 위 "학습 자산화" 연계처.
 - **diff/PR 리뷰 도구** — 변경분 대상. 이 스킬이 핫스팟을 찾으면 그 파일 집합을 diff 리뷰로 넘기는 dispatch도 가능.
 

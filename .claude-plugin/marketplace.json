@@ -65,7 +65,8 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/api-crud-pattern"
+        "./skills/api-crud-pattern",
+        "./skills/test-code-guide"
       ]
     },
     {
