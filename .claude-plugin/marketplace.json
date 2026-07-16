@@ -25,6 +25,7 @@
       "strict": false,
       "skills": [
         "./skills/plan",
+        "./skills/diff-review",
         "./skills/codebase-review",
         "./skills/self-feedback-loop",
         "./skills/compound",

@@ -49,6 +49,7 @@ Claude Code와 Codex가 byte-identical하게 공유하는 tool-agnostic 글로�
 ## Verification And Workspace Identity
 
 - Convert the request into verifiable goals and run proportionate checks before reporting success.
+- Scale a code review's depth and cost to the request and its risk. Default to an evidence-based low-cost pass — read the change directly and execute only the risky claims to verify them — and reserve maximum-recall multi-pass reviews for explicitly requested gates such as release promotion or a focused security audit.
 - Do not claim completion until command output or inspected state supports it. If a check cannot run, explain why and state the remaining risk.
 - After resume, compaction, handoff, or any context reset, re-check `pwd`, `git rev-parse --show-toplevel`, branch, and working-tree state before mutation.
 - Give delegated work an exact working directory and scope. Require the delegate to verify `pwd`, repo top-level, branch, and status before editing or committing.
