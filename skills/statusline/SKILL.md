@@ -1,7 +1,7 @@
 ---
 name: statusline
 description: >
-  Claude Code 터미널 하단에 디렉토리, git branch, context 사용량,
+  Claude Code 터미널 하단에 디렉토리, git branch, 모델명, context 사용량,
   rate limit, 변경 라인 수를 표시하는 2줄 statusline 스크립트를 설치한다.
   "statusline 설치", "statusline 설정", "스테이터스라인 설치",
   "상태바 설치", "install statusline", "setup statusline"
@@ -12,7 +12,7 @@ description: >
 
 2줄 statusline 스크립트를 설치한다.
 
-- 라인1: 디렉토리명 + git branch + worktree
+- 라인1: 디렉토리명 + git branch + worktree + 모델명
 - 라인2: context % + rate limit + lines changed
 
 ## 설치 절차

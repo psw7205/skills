@@ -9,7 +9,8 @@ eval "$(echo "$input" | jq -r '
   "rate_resets=" + (.rate_limits.five_hour.resets_at // empty | tostring | @sh),
   "lines_added=" + (.cost.total_lines_added // 0 | tostring | @sh),
   "lines_removed=" + (.cost.total_lines_removed // 0 | tostring | @sh),
-  "wt_name=" + (.worktree.name // empty | @sh)
+  "wt_name=" + (.worktree.name // empty | @sh),
+  "model_name=" + (.model.display_name // .model.id // empty | @sh)
 ' 2>/dev/null)"
 
 # Git branch (with detached HEAD fallback)
@@ -23,8 +24,9 @@ fi
 short_cwd="${cwd##*/}"
 sep="\033[0;90m|\033[0m"
 line1=$(printf "\033[0;34m%s\033[0m" "$short_cwd")
-[ -n "$branch" ]   && line1=$(printf "%s \033[0;35m(%s)\033[0m" "$line1" "$branch")
-[ -n "$wt_name" ]  && line1=$(printf "%b \033[0;36m🌿%s\033[0m" "$line1" "$wt_name")
+[ -n "$branch" ]     && line1=$(printf "%s \033[0;35m(%s)\033[0m" "$line1" "$branch")
+[ -n "$wt_name" ]    && line1=$(printf "%b \033[0;36m🌿%s\033[0m" "$line1" "$wt_name")
+[ -n "$model_name" ] && line1=$(printf "%b \033[0;90m|\033[0m \033[0;37m✳ %s\033[0m" "$line1" "$model_name")
 
 # Line 2: ctx + rate limit + lines changed
 parts=""
