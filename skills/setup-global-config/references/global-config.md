@@ -28,7 +28,7 @@ Only two things belong in this file: user policy the execution environment does 
 
 ## Implementation
 
-- Comment what the reader cannot reconstruct from the code: wire and storage contracts, library or platform traps, and why a plausible alternative was rejected. That reasoning is unrecoverable once the session ends.
+- Default to no comments. Names, structure, and tests carry the explanation. Write one only for what the reader cannot reconstruct from the code and would otherwise get wrong: a wire or storage contract, a library or platform trap, or why a plausible alternative was rejected. Never restate what the next line does, never label a section, never narrate the change you just made.
 - Keep each fact next to the code that owns it — restatements and comment-to-comment references both drift from what they describe.
 - Delete commented-out code and disabled tests instead of parking them; version control already holds the history, while a disabled block reads as intent rather than removal.
 - Let the declared toolchain own installs: `uv` for Python packages, `mise` for language and tool versions. Do not reach for `pip install` or ad-hoc global installers.
