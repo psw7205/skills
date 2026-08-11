@@ -12,7 +12,7 @@ Registers or removes the Codex guard hook in:
 Environment:
   CODEX_HOME                 Override Codex home directory.
   CODEX_HOOKS_FILE           Override hooks.json path.
-  SETUP_HOOKS_CODEX_SCRIPT   Override guard-untracked-codex.sh path.
+  SETUP_HOOKS_CODEX_SCRIPT   Override guard-commands-codex.sh path.
 USAGE
 }
 
@@ -37,14 +37,21 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-HOOK_SCRIPT="${SETUP_HOOKS_CODEX_SCRIPT:-$SCRIPT_DIR/guard-untracked-codex.sh}"
+HOOK_SCRIPT="${SETUP_HOOKS_CODEX_SCRIPT:-$SCRIPT_DIR/guard-commands-codex.sh}"
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 HOOKS_FILE="${CODEX_HOOKS_FILE:-$CODEX_HOME/hooks.json}"
 HOOK_COMMAND="bash $HOOK_SCRIPT"
 
-if [ "$ACTION" = "install" ] && [ ! -f "$HOOK_SCRIPT" ]; then
-  echo "Codex hook script not found: $HOOK_SCRIPT" >&2
-  exit 1
+if [ "$ACTION" = "install" ]; then
+  if [ ! -f "$HOOK_SCRIPT" ]; then
+    echo "Codex hook script not found: $HOOK_SCRIPT" >&2
+    exit 1
+  fi
+  RULES_SCRIPT="$(dirname "$HOOK_SCRIPT")/guard-rules.sh"
+  if [ ! -f "$RULES_SCRIPT" ]; then
+    echo "Shared rules library not found next to the hook: $RULES_SCRIPT" >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$(dirname "$HOOKS_FILE")"
@@ -69,7 +76,12 @@ jq --arg action "$ACTION" --arg command "$HOOK_COMMAND" '
     | map(
         .hooks = (
           (.hooks // [])
-          | map(select(((.command // "") | contains("guard-untracked-codex.sh")) | not))
+          | map(select(
+              (
+                ((.command // "") | contains("guard-commands-codex.sh")) or
+                ((.command // "") | contains("guard-untracked-codex.sh"))
+              ) | not
+            ))
         )
       )
     | map(select((.hooks // []) | length > 0))
@@ -84,7 +96,7 @@ jq --arg action "$ACTION" --arg command "$HOOK_COMMAND" '
             "command": $command,
             "async": false,
             "timeoutSec": 5,
-            "statusMessage": "Guarding destructive git commands..."
+            "statusMessage": "Guarding risky shell commands..."
           }
         ]
       }

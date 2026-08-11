@@ -14,7 +14,7 @@
 |------|------|------------|
 | `commit-msg` | 커밋 메시지 추천 (실행 안 함) + 가드레일 체크 | "커밋 만들어", "커밋 메시지 추천", "뭐라고 커밋하지" |
 | `commit-regroup` | push 전 로컬 커밋을 논리 단위로 재구성 (soft-reset 재배치 + 트리 동일성 검증) | "커밋 묶어줘", "로컬 커밋 grouping", "push 전에 커밋 정리해줘" |
-| `setup-hooks` | git 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거" |
+| `setup-hooks` | shell 명령 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny, `rg --replace` deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거", "rg -r 막아줘" |
 | `trace-change-why` | 코드 변경의 WHY(원인, 동기, 판단 근거)를 세션 트랜스크립트에서 추적 | "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?" |
 | `git-diagnosis` | Git 이력 기반 코드베이스 건강 진단 — 교차 분석으로 고위험 코드 식별 | "프로젝트 분석해줘", "코드베이스 진단", "codebase audit" |
 | `worktree-lifecycle` | git worktree lifecycle 4단계(setup/working/prep/cleanup) 식별 + fast-path 결정 트리 + squash 직전 정리 가이드 | "worktree 만들까", "여기서 바로 할까", "main 머지 준비", "worktree 정리" |
@@ -48,7 +48,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `prompt` | 프롬프트 다듬기/생성 (진단 기반 구조·기법·표현 개선) | "프롬프트 다듬어줘", "refine prompt" |
-| `humanizer` | 문장과 글의 AI 티 검사 + 한국어 번역투/문체 rewrite | "문장 검사", "AI 티 제거", "번역투 고쳐", "humanize this" |
+| `humanizer` | 문장과 글의 AI 티 검사 + 한국어 번역투/GPT 말투 rewrite | "문장 검사", "AI 티 제거", "번역투 고쳐", "GPT 말투 빼줘", "humanize this" |
 | `skill-guide` | 새 스킬 작성 시 참조하는 스펙/구조/워크플로우 가이드 | "스킬 만들어줘", "새 skill 추가" |
 | `clean-memory` | 프로젝트 메모리 스캔 → CLAUDE.md 중복 삭제 + 범용 규칙 글로벌 승격 | "메모리 정리해줘", "clean memory" |
 
@@ -166,8 +166,10 @@ custom-skills/
 │   ├── setup-hooks/
 │   │   ├── SKILL.md
 │   │   └── scripts/
-│   │       ├── guard-untracked.sh
-│   │       ├── guard-untracked-codex.sh
+│   │       ├── guard-rules.sh
+│   │       ├── guard-commands.sh
+│   │       ├── guard-commands-codex.sh
+│   │       ├── rg-replace-flag-fix.py
 │   │       └── install-codex-hook.sh
 │   ├── statusline/
 │   │   ├── SKILL.md

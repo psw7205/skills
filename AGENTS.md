@@ -14,7 +14,7 @@ custom-skills 레포 작업 시 레포 파일만 수정한다. 로컬 설치 경
 - `docs/`: 스킬 빌딩 참고 자료 및 플랜 아카이브.
 - `.claude/settings.local.json`: 로컬 에이전트/에디터 설정. 공유 동작에 의존하지 말 것.
 
-등록된 스킬 목록은 `.claude-plugin/marketplace.json`의 `plugins[].skills[]` 배열을 참조한다. `setup-hooks` 스킬은 Claude Code용 `~/.claude/settings.json` hook과 Codex용 `~/.codex/hooks.json` hook을 설치/제거한다. Claude Code hook은 `git clean`, `git checkout .`, `git reset --hard`, `git restore .` 실행 전 auto-stash를 삽입하고, Codex hook은 같은 파괴적 명령을 rewrite 없이 deny한다. 두 hook 모두 `git push --force`를 deny하고 `git push --force-with-lease`는 허용한다. 참고 파일이나 스크립트가 필요한 경우가 아니면 얕은 구조를 유지.
+등록된 스킬 목록은 `.claude-plugin/marketplace.json`의 `plugins[].skills[]` 배열을 참조한다. `setup-hooks` 스킬은 Claude Code용 `~/.claude/settings.json` hook과 Codex용 `~/.codex/hooks.json` hook을 설치/제거한다. Claude Code hook은 `git clean`, `git checkout .`, `git reset --hard`, `git restore .` 실행 전 auto-stash를 삽입하고, Codex hook은 같은 파괴적 명령을 rewrite 없이 deny한다. 두 hook 모두 `git push --force`와 `rg -r/--replace`(단 `-o` 동반 시 허용)를 deny하고 `git push --force-with-lease`는 허용한다. 판정 로직은 두 hook이 공유하는 `guard-rules.sh`에 있으며, 명령 문자열을 세그먼트로 나눠 command word와 서브커맨드로 식별한다. `rg -rn` 형태 short-flag 클러스터는 별도 Claude Code hook `rg-replace-flag-fix.py`가 `-r`을 제거하는 rewrite로 교정하고, shell hook은 이를 가로채지 않는다. 참고 파일이나 스크립트가 필요한 경우가 아니면 얕은 구조를 유지.
 
 스킬은 특정 프로젝트의 성공 사례, 로컬 경로, framework 관례를 그대로 고정하지 않는다. 도메인별 판단이 필요한 스킬은 작업 시점에 대상 repo의 실제 파일, 설정, schema, API 관례, runtime evidence를 확인하도록 작성한다. 새 스킬이나 스킬 동작 변경 시 `README.md`와 `.claude-plugin/marketplace.json`을 함께 갱신한다.
 
