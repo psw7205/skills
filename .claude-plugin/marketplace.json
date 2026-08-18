@@ -30,6 +30,7 @@
         "./skills/self-feedback-loop",
         "./skills/compound",
         "./skills/session-history",
+        "./skills/session-log",
         "./skills/session-bridge",
         "./skills/repo-prd-sync"
       ]
