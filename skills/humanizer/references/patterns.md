@@ -124,6 +124,7 @@ AI 글쓰기 흔적을 찾고 줄이는 패턴 사전이다. 단일 표식으로
 - `not only... but also`
 - `not just about X, it is about Y`
 - 문장 끝에 `no guessing`, `no wasted motion`처럼 부정형 구호를 붙인다.
+- 한국어: `단순한 A가 아니라 B다`, `A를 넘어 B다`. 한국어 문서에서 가장 흔한 LLM 골격이다. `korean-patterns.md` K-1 참조.
 
 수정:
 
@@ -251,11 +252,12 @@ AI 글쓰기 흔적을 찾고 줄이는 패턴 사전이다. 단일 표식으로
 징후:
 
 - `Of course!`, `Certainly!`, `I hope this helps`, `let me know`, `Would you like`
-- 한국어: `물론입니다`, `좋은 질문입니다`, `도움이 되었으면 좋겠습니다`, `더 필요하시면 알려주세요`
+- 한국어: `물론입니다`, `좋은 질문입니다`, `도움이 되었으면 좋겠습니다`, `더 필요하시면 알려주세요`, `원하시면 ~해드릴까요?`
 
 수정:
 
 - 본문 밖의 챗봇 응답 흔적을 제거한다.
+- 한국어 입력이 챗봇 응답 전체라면 아첨, 후속 제안, 훈계 도입부, 책임 회피가 함께 온다. `korean-patterns.md` L 섹션을 먼저 적용한다.
 
 ### 21. knowledge-cutoff disclaimer와 speculative gap fill
 
@@ -275,10 +277,13 @@ AI 글쓰기 흔적을 찾고 줄이는 패턴 사전이다. 단일 표식으로
 징후:
 
 - `Great question`, `You're absolutely right`, `excellent point`
+- 완곡한 반박 전환구도 같은 계열이다. `You're quite right, however`, `half right`, `that's a fair point, but`.
+- 한국어: `핵심을 찔렀다`, `통찰력이 있다`, `절반은 맞다`, `상당히 맞다`. 영어에서는 체면을 세우는 관습이지만 한국어로 직역하면 과한 칭찬이나 전면 부정이 된다. `korean-patterns.md` L-1, L-2 참조.
 
 수정:
 
 - 필요한 인정만 짧게 남긴다.
+- 동의와 반론은 한 문장에 겹치지 말고 분리한다.
 
 ## Filler and rhetoric
 
