@@ -12,7 +12,7 @@ Registers or removes the Codex guard hook in:
 Environment:
   CODEX_HOME                 Override Codex home directory.
   CODEX_HOOKS_FILE           Override hooks.json path.
-  SETUP_HOOKS_CODEX_SCRIPT   Override guard-commands-codex.sh path.
+  SETUP_HOOKS_CODEX_SCRIPT   Override guard-commands-codex.py path.
 USAGE
 }
 
@@ -37,21 +37,24 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-HOOK_SCRIPT="${SETUP_HOOKS_CODEX_SCRIPT:-$SCRIPT_DIR/guard-commands-codex.sh}"
+HOOK_SCRIPT="${SETUP_HOOKS_CODEX_SCRIPT:-$SCRIPT_DIR/guard-commands-codex.py}"
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 HOOKS_FILE="${CODEX_HOOKS_FILE:-$CODEX_HOME/hooks.json}"
-HOOK_COMMAND="bash $HOOK_SCRIPT"
+HOOK_COMMAND="python3 $HOOK_SCRIPT"
 
 if [ "$ACTION" = "install" ]; then
   if [ ! -f "$HOOK_SCRIPT" ]; then
     echo "Codex hook script not found: $HOOK_SCRIPT" >&2
     exit 1
   fi
-  RULES_SCRIPT="$(dirname "$HOOK_SCRIPT")/guard-rules.sh"
-  if [ ! -f "$RULES_SCRIPT" ]; then
-    echo "Shared rules library not found next to the hook: $RULES_SCRIPT" >&2
-    exit 1
-  fi
+  # The hook imports these as siblings; without them it would exit 0 on every
+  # command and guard nothing.
+  for module in guard_rules.py shell_lex.py; do
+    if [ ! -f "$(dirname "$HOOK_SCRIPT")/$module" ]; then
+      echo "Shared module not found next to the hook: $module" >&2
+      exit 1
+    fi
+  done
 fi
 
 mkdir -p "$(dirname "$HOOKS_FILE")"
@@ -78,6 +81,7 @@ jq --arg action "$ACTION" --arg command "$HOOK_COMMAND" '
           (.hooks // [])
           | map(select(
               (
+                ((.command // "") | contains("guard-commands-codex.py")) or
                 ((.command // "") | contains("guard-commands-codex.sh")) or
                 ((.command // "") | contains("guard-untracked-codex.sh"))
               ) | not

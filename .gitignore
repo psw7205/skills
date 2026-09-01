@@ -12,3 +12,6 @@ Thumbs.db
 # Skills CLI
 .agents/
 skills-lock.json
+
+# Python
+__pycache__/

@@ -10,6 +10,13 @@ search returning garbage rather than a usage error. Same trap for -rl, -rln,
 Deliberately NOT touched: space-separated `rg -r <value>` and long --replace,
 which remain the escape hatch for real substitution.
 
+Quoted spans and heredoc bodies are not touched either. They are data, not
+flags, and rewriting them corrupts what the command writes rather than how it
+runs: `echo "never use rg -rn" >> notes.md` would silently record the opposite
+of what was meant, and the damage lands in a file instead of in one search.
+Detection therefore runs over shell_lex's masked copy while the edit lands on
+the original, so both views keep identical offsets.
+
 Lives in its own file rather than inlined into a shell hook because the patterns
 below contain both quote characters; embedding them in a shell string is how the
 first version of this hook silently broke.
@@ -19,12 +26,21 @@ import json
 import re
 import sys
 
-# rg short flags that take no value. -h (help) and -V (version) are excluded:
-# clustering them carries no recoverable intent, so leave those alone.
-BOOL_FLAGS = set("acFHIiLlNnopqSsUuvwxz")
+try:
+    # The set the guard defers on must be the set repaired here. Two copies
+    # would drift into a gap where the guard passes a cluster expecting this
+    # hook to fix it and this hook leaves it alone.
+    from guard_rules import RG_BOOL_FLAGS as BOOL_FLAGS
+    from shell_lex import SEPARATORS, mask_literals
+except Exception:
+    # A broken install must not make every Bash call fail. Repairing nothing is
+    # better than a traceback on stderr before each command.
+    sys.exit(0)
 
 # Shell operators that end one command; -r only rebinds within its own segment.
-SEGMENT = re.compile(r"(\|\||&&|[|;\n])")
+# Taken from the lexer so the two hooks cannot disagree on where a command ends:
+# a cluster after `&` belongs to the next command, not to the rg before it.
+SEGMENT = re.compile("([" + re.escape(SEPARATORS) + "])")
 # Quote chars are excluded from the lookbehind so a searched-for literal such as
 # `rg -n -- '-rn'` survives; the -- cutoff covers bare positional patterns.
 CLUSTER = re.compile(r"""(?<![\w'"-])-r([a-zA-Z]+)(?![\w-])""")
@@ -33,35 +49,33 @@ RG_WORD = re.compile(r"(?<![\w./-])(?:[\w./-]*/)?rg(?![\w./-])")
 END_OF_FLAGS = re.compile(r"(?<!\S)--(?!\S)")
 
 
-def fix_segment(seg):
-    m = RG_WORD.search(seg)
-    if not m:
-        return seg, False
-    head, rest = seg[: m.end()], seg[m.end() :]
-
-    # Everything past a standalone -- is an operand, never a flag cluster.
-    stop = END_OF_FLAGS.search(rest)
-    scan, keep = (rest[: stop.start()], rest[stop.start() :]) if stop else (rest, "")
-
-    changed = False
-
-    def sub(mo):
-        nonlocal changed
-        if not set(mo.group(1)) <= BOOL_FLAGS:
-            return mo.group(0)
-        changed = True
-        return "-" + mo.group(1)
-
-    return head + CLUSTER.sub(sub, scan) + keep, changed
-
-
 def fix_command(cmd):
-    parts = SEGMENT.split(cmd)
-    touched = False
-    for i in range(0, len(parts), 2):  # odd indices hold the captured separators
-        parts[i], hit = fix_segment(parts[i])
-        touched = touched or hit
-    return "".join(parts), touched
+    masked = mask_literals(cmd)
+    edits = []
+    offset = 0
+    parts = SEGMENT.split(masked)
+    for idx, part in enumerate(parts):
+        start = offset
+        offset += len(part)
+        if idx % 2:  # odd indices hold the captured separators
+            continue
+        m = RG_WORD.search(masked, start, offset)
+        if not m:
+            continue
+        # Everything past a standalone -- is an operand, never a flag cluster.
+        stop = END_OF_FLAGS.search(masked, m.end(), offset)
+        limit = stop.start() if stop else offset
+        for mo in CLUSTER.finditer(masked, m.end(), limit):
+            if set(mo.group(1)) <= BOOL_FLAGS:
+                edits.append((mo.start(), mo.end(), "-" + mo.group(1)))
+    if not edits:
+        return cmd, False
+
+    out = cmd
+    # Right to left so earlier offsets stay valid as the string shrinks.
+    for start, end, repl in sorted(edits, reverse=True):
+        out = out[:start] + repl + out[end:]
+    return out, True
 
 
 def main():
@@ -96,4 +110,7 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception:
+        sys.exit(0)
