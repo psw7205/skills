@@ -1,0 +1,20 @@
+# 전역 언어·도구 버전. ~/.config/mise/config.toml 에 놓는다.
+# 프로젝트별 고정은 각 repo의 mise.toml 이 우선한다.
+
+[tools]
+age = "latest"
+bun = "latest"
+go = "1.25.6"
+java = "openjdk-21.0.2"
+lefthook = "latest"
+node = "24.14.1"
+python = "3.14"
+ruby = "3"
+sops = "latest"
+terraform = "1.14.3"
+uv = "latest"
+zig = "latest"
+
+[settings]
+# .node-version, .python-version 같은 관용 파일도 버전 소스로 인정한다.
+idiomatic_version_file_enable_tools = ["node", "python"]

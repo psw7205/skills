@@ -1,0 +1,148 @@
+# 기준선 zsh 설정. 머신 고유 값(회사 PATH, 자격증명, 개인 도구)은 여기 두지 않고
+# ~/.zshrc.local 에 두고 맨 아래에서 source 한다.
+
+# Powerlevel10k instant prompt. oh-my-zsh 로드보다 먼저 와야 한다.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# --- oh-my-zsh ---
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="powerlevel10k/powerlevel10k"
+DISABLE_MAGIC_FUNCTIONS="true"
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#a3a3a3,bg=bold,underline"
+ZSH_TMUX_CONFIG="$HOME/.config/tmux/tmux.conf"
+
+# fzf-tab, zsh-autosuggestions, fast-syntax-highlighting 은 번들이 아니라
+# $ZSH_CUSTOM/plugins 에 각각 clone 해야 한다.
+plugins=(
+  git
+  fzf-tab
+  zsh-autosuggestions
+  fast-syntax-highlighting
+  brew
+  docker
+  docker-compose
+  kubectl
+  kubectx
+  mise
+  yarn
+  terraform
+  tmux
+  you-should-use
+)
+
+HISTSIZE=10000
+SAVEHIST=10000
+
+source $ZSH/oh-my-zsh.sh
+
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# --- PATH ---
+export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
+
+# --- alias ---
+alias c="code"
+alias vi="nvim"
+alias vim="nvim"
+alias f="fork ."
+alias bbb="brew update && brew upgrade -y && brew cleanup"
+
+# --- zoxide ---
+export _ZO_MAXAGE=100000
+eval "$(zoxide init zsh --cmd j)"
+
+# --- fzf ---
+source <(fzf --zsh)
+export FZF_DEFAULT_COMMAND="fd --hidden --strip-cwd-prefix --exclude .git"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="fd --type=d --hidden --strip-cwd-prefix --exclude .git"
+
+_fzf_compgen_path() {
+  fd --hidden --exclude .git . "$1"
+}
+
+_fzf_compgen_dir() {
+  fd --type=d --hidden --exclude .git . "$1"
+}
+
+fgd() {
+  preview="git diff $@ --color=always -- {-1}"
+  git diff $@ --name-only | fzf -m --ansi --preview $preview
+}
+
+fbat() {
+  fzf --preview "bat --color=always --style=numbers --line-range=:500 {}"
+}
+
+fshow() {
+  git log --graph --color=always \
+      --format="%C(auto)%h%d %s %C(black)%C(bold)%cr" "$@" |
+  fzf --ansi --no-sort --reverse --tiebreak=index --bind=ctrl-s:toggle-sort \
+      --bind "ctrl-m:execute:
+                (grep -o '[a-f0-9]\{7\}' | head -1 |
+                xargs -I % sh -c 'git show --color=always % | less -R') << 'FZF-EOF'
+                {}
+FZF-EOF"
+}
+
+# --- fx ---
+source <(fx --comp zsh)
+
+# --- Android SDK (모바일 개발할 때만) ---
+# export ANDROID_HOME="$HOME/Library/Android/sdk"
+# export PATH="$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin"
+
+# --- docker CLI 자동완성 ---
+[[ -d "$HOME/.docker/completions" ]] && fpath=("$HOME/.docker/completions" $fpath)
+
+# tty가 C-s를 XON/XOFF flow control로 삼키면 tmux·herdr의 ctrl+s prefix가 앱까지 오지 않는다.
+stty -ixon 2>/dev/null
+
+# zsh 5.9의 _ssh_hosts는 known_hosts나 /etc/hosts가 매치되면 ~/.ssh/config를 읽기 전에
+# return한다. Host 별칭만 완성 후보로 강제한다.
+_ssh_config_aliases() {
+  local -a files=(~/.ssh/config)
+  local f line
+  while (( $#files )); do
+    f=${~files[1]}; shift files
+    [[ -r $f ]] || continue
+    while IFS= read -r line; do
+      case ${(L)${${(z)line}[1]}} in
+        include) files+=(${(z)${line#*[[:space:]]}}) ;;
+        host)    print -l ${${(z)line}[2,-1]:#*[*?]*} ;;
+      esac
+    done < $f
+  done
+}
+zstyle -e ':completion:*:(ssh|scp|sftp|rsync|ssh-copy-id|ssh-add):*' hosts \
+  'reply=(${(uf)"$(_ssh_config_aliases)"})'
+zstyle ':completion:*:(ssh|scp|sftp|rsync|ssh-copy-id):*' users
+
+# herdr: tab label을 현재 디렉토리 이름으로 유지 (tmux automatic-rename 상당).
+# 사이드바 agents 패널은 space label이 workspace 생성 시점 cwd에 고정되므로,
+# tab label이 유일한 per-tab 위치 표시다. 캐시 비교로 chpwd당 소켓 왕복을 1회로 줄이고,
+# 디렉토리가 실제로 바뀌지 않으면 수동으로 지은 이름을 덮어쓰지 않는다.
+# worktree(<repo>/.worktree/<slug>)는 space 헤더가 이미 repo를 표시하므로 slug만 ⑂로 구분한다.
+if [[ ${HERDR_ENV:-} == 1 && -n ${HERDR_TAB_ID:-} ]] && (( $+commands[herdr] )); then
+  autoload -Uz add-zsh-hook
+  _herdr_tab_name() {
+    local name
+    if [[ $PWD == */.worktree/* ]]; then
+      name="⑂${${PWD#*/.worktree/}%%/*}"
+    else
+      name=${PWD:t}
+    fi
+    [[ $name == ${_herdr_tab_last:-} ]] && return
+    _herdr_tab_last=$name
+    herdr tab rename "$HERDR_TAB_ID" "$name" >/dev/null 2>&1
+  }
+  add-zsh-hook chpwd _herdr_tab_name
+  _herdr_tab_name
+fi
+
+# 머신 고유 설정. 추적하지 않는다.
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local

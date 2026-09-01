@@ -1,0 +1,111 @@
+# 개발 핵심 패키지. 머신 스냅샷이 아니라 큐레이션된 기준선이다.
+# 회사·프로젝트 전용 tap과 개인 유틸리티는 의도적으로 제외했다 — 로컬에서 별도 관리한다.
+# 설치: brew bundle install --file=<this>
+# 확인: brew bundle check --file=<this> --verbose
+
+tap "derailed/k9s"
+
+# --- shell / 파일 / 텍스트 ---
+brew "coreutils"
+brew "gawk"
+brew "fd"
+brew "ripgrep"
+brew "fzf"
+brew "bat"
+brew "eza"
+brew "jq"
+brew "tree"
+brew "zoxide"
+brew "tlrc"
+brew "fx"
+
+# --- 시스템 관찰 ---
+brew "htop"
+brew "btop"
+brew "ncdu"
+brew "duf"
+brew "dust"
+brew "lnav"
+
+# --- git ---
+brew "gh"
+brew "git-delta"
+brew "git-lfs"
+brew "lazygit"
+
+# --- 에디터 / 터미널 ---
+brew "neovim"
+brew "tmux"
+
+# --- 컨테이너 / 쿠버네티스 ---
+brew "colima"
+brew "docker"
+brew "docker-compose"
+brew "docker-buildx"
+brew "docker-credential-helper"
+brew "kubernetes-cli"
+brew "kubectx"
+brew "kustomize"
+brew "helm@3"
+brew "kubeconform"
+brew "skopeo"
+brew "derailed/k9s/k9s"
+
+# --- IaC / 클라우드 ---
+brew "ansible"
+brew "argocd"
+brew "tflint"
+brew "awscli"
+brew "cloudflared"
+
+# --- 언어 / 툴체인 ---
+# 언어 런타임 자체는 mise가 관리한다 (references/mise-config.toml).
+brew "mise"
+brew "uv"
+
+# --- 데이터 / 네트워크 ---
+brew "libpq"
+brew "mysql-client"
+brew "httpie"
+brew "mkcert"
+brew "rclone"
+
+# --- 문서 ---
+brew "pandoc"
+brew "graphviz"
+
+# --- 빌드 / CI ---
+brew "act"
+brew "biome"
+brew "watchman"
+
+# --- 모바일 개발 (필요할 때만) ---
+# brew "bundletool"
+# brew "ios-deploy"
+# brew "libimobiledevice"
+# brew "scrcpy"
+# cask "android-studio"
+
+# --- 폰트 ---
+cask "font-jetbrains-mono"
+cask "font-jetbrains-mono-nerd-font"
+
+# --- 에디터 / 개발 앱 ---
+cask "visual-studio-code"
+cask "zed"
+cask "fork"
+cask "dbeaver-community"
+cask "mitmproxy"
+
+# --- 에이전트 CLI ---
+cask "claude"
+cask "codex"
+
+# --- 유틸리티 ---
+cask "raycast"
+cask "rectangle"
+cask "maccy"
+cask "keka"
+cask "appcleaner"
+cask "localsend"
+cask "tailscale-app"

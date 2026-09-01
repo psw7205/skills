@@ -1,0 +1,13 @@
+# 로그인 셸 초기화. 대화형 설정은 zshrc가 담당한다.
+
+eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+eval "$(mise activate zsh --shims)"
+
+export PATH="$HOME/.local/bin:$PATH"
+
+# GitHub 토큰이 필요한 도구용. 값은 gh 키체인에서 매번 읽으므로 이 파일에 비밀이 남지 않는다.
+# 다만 모든 셸의 환경변수로 노출되므로, 그 트레이드오프를 받아들일 때만 주석을 푼다.
+# export GITHUB_TOKEN="$(gh auth token)"
+
+# 머신 고유 설정(회사 CLI PATH, 사설 레지스트리 등). 추적하지 않는다.
+[[ -f ~/.zprofile.local ]] && source ~/.zprofile.local

@@ -41,8 +41,11 @@
       "source": "./",
       "strict": false,
       "skills": [
+        "./skills/setup-machine",
+        "./skills/setup-dotfiles",
         "./skills/tmux",
         "./skills/cmux-help",
+        "./skills/setup-herdr",
         "./skills/statusline",
         "./skills/setup-global-config",
         "./skills/rn-cdp-bridge",
