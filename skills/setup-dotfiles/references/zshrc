@@ -90,6 +90,9 @@ FZF-EOF"
 # --- fx ---
 source <(fx --comp zsh)
 
+# --- herdr (설치된 머신만) ---
+(( $+commands[herdr] )) && source <(herdr completion zsh)
+
 # tty가 C-s를 XON/XOFF flow control로 삼키면 tmux·herdr의 ctrl+s prefix가 앱까지 오지 않는다.
 stty -ixon 2>/dev/null
 
