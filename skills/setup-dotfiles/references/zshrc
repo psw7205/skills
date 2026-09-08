@@ -1,5 +1,5 @@
-# 기준선 zsh 설정. 머신 고유 값(회사 PATH, 자격증명, 개인 도구)은 여기 두지 않고
-# ~/.zshrc.local 에 두고 맨 아래에서 source 한다.
+# 대화형 셸 설정. PATH와 비대화형 도구가 읽는 환경변수는 zprofile에, 머신 고유 값
+# (회사 PATH, 자격증명, 개인 도구)은 ~/.zshrc.local 에 두고 맨 아래에서 source 한다.
 
 # Powerlevel10k instant prompt. oh-my-zsh 로드보다 먼저 와야 한다.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
@@ -35,14 +35,12 @@ plugins=(
 HISTSIZE=10000
 SAVEHIST=10000
 
+# fpath 추가는 oh-my-zsh.sh가 실행하는 compinit 이전에 와야 completion에 반영된다.
+[[ -d "$HOME/.docker/completions" ]] && fpath=("$HOME/.docker/completions" $fpath)
+
 source $ZSH/oh-my-zsh.sh
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-# --- PATH ---
-export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
-export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
-export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
 
 # --- alias ---
 alias c="code"
@@ -91,13 +89,6 @@ FZF-EOF"
 
 # --- fx ---
 source <(fx --comp zsh)
-
-# --- Android SDK (모바일 개발할 때만) ---
-# export ANDROID_HOME="$HOME/Library/Android/sdk"
-# export PATH="$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin"
-
-# --- docker CLI 자동완성 ---
-[[ -d "$HOME/.docker/completions" ]] && fpath=("$HOME/.docker/completions" $fpath)
 
 # tty가 C-s를 XON/XOFF flow control로 삼키면 tmux·herdr의 ctrl+s prefix가 앱까지 오지 않는다.
 stty -ixon 2>/dev/null

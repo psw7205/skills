@@ -1,0 +1,10 @@
+# 모든 zsh가 읽는다: 스크립트, `zsh -c`, ssh 원격 명령, IDE가 띄우는 비대화형 셸까지.
+# 값만 정하는 export로 한정한다. 외부 명령 실행은 모든 셸 기동을 느리게 한다.
+
+# 중복 PATH 항목을 자동 제거한다. 설치기가 rc 파일 끝에 덧붙이는 export도 무해해진다.
+typeset -U path PATH
+
+# macOS /etc/zprofile의 path_helper가 login 셸에서 PATH를 재구성해 이 prepend를
+# 시스템 경로 뒤로 민다. zprofile이 다시 앞에 붙이므로 login 셸의 순서는 zprofile이 정한다.
+path=("$HOME/.local/bin" $path)
+export PATH

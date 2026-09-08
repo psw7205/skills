@@ -1,9 +1,24 @@
-# 로그인 셸 초기화. 대화형 설정은 zshrc가 담당한다.
+# login 셸 초기화. PATH와 비대화형 도구가 읽는 환경변수는 여기 둔다. 대화형 설정은 zshrc.
+# macOS에서 Terminal, IDE의 셸 환경 해석, Claude Code 스냅샷은 모두 login 셸을 거치므로
+# 터미널 없이 뜬 프로세스가 보는 실효 파일은 zshenv가 아니라 이 파일이다.
 
 eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 eval "$(mise activate zsh --shims)"
 
-export PATH="$HOME/.local/bin:$PATH"
+# /etc/zprofile의 path_helper 이후에 실행되므로 여기서 정한 앞쪽 순서가 최종 순서다.
+# libpq·mysql-client는 keg-only라 /opt/homebrew/bin에 링크되지 않는다.
+path=(
+  "$HOME/.local/bin"
+  /opt/homebrew/opt/libpq/bin
+  /opt/homebrew/opt/mysql-client/bin
+  $path
+)
+
+export REACT_EDITOR=code
+
+# Android SDK (모바일 개발할 때만)
+# export ANDROID_HOME="$HOME/Library/Android/sdk"
+# path+=("$ANDROID_HOME/emulator" "$ANDROID_HOME/platform-tools" "$ANDROID_HOME/cmdline-tools/latest/bin")
 
 # GitHub 토큰이 필요한 도구용. 값은 gh 키체인에서 매번 읽으므로 이 파일에 비밀이 남지 않는다.
 # 다만 모든 셸의 환경변수로 노출되므로, 그 트레이드오프를 받아들일 때만 주석을 푼다.

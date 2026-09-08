@@ -39,7 +39,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `setup-machine` | 새 머신 기본 환경 오케스트레이션 (글로벌 설정·훅·세션 로그·statusline·herdr를 순서·충돌 관리 하에 설치, 점검 모드 지원) | "새 머신 셋업", "개발 환경 셋업해줘", "환경 점검해줘" |
-| `setup-dotfiles` | 셸·brew·mise 기준선 설치·대조 (번들 zshrc/zprofile/Brewfile/mise, 머신 고유 값은 `.local` 분리) | "dotfiles 설치", "zshrc 셋업", "Brewfile 적용", "dotfiles 대조" |
+| `setup-dotfiles` | 셸·brew·mise 기준선 설치·대조 (번들 zshenv/zprofile/zshrc/Brewfile/mise, 머신 고유 값은 `.local` 분리) | "dotfiles 설치", "zshrc 셋업", "Brewfile 적용", "dotfiles 대조" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | "cmux 사용법", "cmux 설정", "cmux 브라우저", "cmux sidebar" |
 | `setup-herdr` | herdr `config.toml`을 다른 머신으로 이식·검증 (OS별 경로, byte-exact 전송, `config check` 3단 진단, remote attach 키 소유권) | "herdr 설정 이식", "윈도우에 herdr 설정 적용", "herdr prefix 바꿔줘", "herdr 단축키 안 먹어" |
