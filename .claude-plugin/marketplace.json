@@ -33,7 +33,8 @@
         "./skills/session-log",
         "./skills/session-bridge",
         "./skills/session-cost-audit",
-        "./skills/repo-prd-sync"
+        "./skills/repo-prd-sync",
+        "./skills/figma-spec-sync"
       ]
     },
     {

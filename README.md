@@ -33,6 +33,7 @@
 | `session-bridge` | Claude Code/Codex CLI/OpenCode transcript를 session id로 찾아 handoff 요약 작성 | "claude 세션 이어서", "opencode session handoff" |
 | `session-cost-audit` | Claude Code transcript 토큰 집계 → 비용 방정식 항(요청/턴·컨텍스트·cache 재구축 원인·도구 출력·subagent 모델·effort)과 anti-pattern flag 보고 | "세션 비용 분석", "토큰 어디서 새", "캐시 미스 확인", "cost dashboard" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
+| `figma-spec-sync` | Figma 기획 파일 → 기계 추출 스냅샷(md+PNG) → 구조 delta → 구현 대조 → 정합 plan(대조표) 라우팅. version 게이트로 미반영 pull 판정 | "figma 뭐 바뀌었나", "figma 스냅샷 받아", "figma 변경으로 계획 세워줘", "figma sync" |
 
 ### 개발 환경
 
