@@ -192,8 +192,15 @@ function nodeLink({ fileKey, fileSlug }, id) {
 }
 
 // summary는 raw HTML 안이라 기획 원문의 <꺾쇠>가 태그로 먹혀 사라진다. 본문은 fenced block이라 안전.
+// 결과는 텍스트 노드와 alt·title 큰따옴표 속성 양쪽에 들어간다(아래 esc alias).
+// 따옴표를 막지 않으면 이름에 `"`가 든 프레임에서 속성이 끊긴다.
 function escapeHtml(text) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function isNamed(node) {
@@ -330,8 +337,10 @@ async function downloadImages(groups, opts, token) {
 
   // 화면이 추가되면 뒤쪽 index가 통째로 밀려, 이전 run의 PNG가 현행과 같은 번호대에 남는다.
   // index.html은 현행만 가리키지만 파일명으로 훑으면 구판이 현행으로 읽히므로 지운다.
-  // 전량 렌더 실패에 디렉토리를 비우지 않도록 한 장이라도 받았을 때만 돈다.
-  const stale = done > 0 ? pruneStale(opts.images, written) : 0;
+  // 받지 못한 장이 있으면 돌리지 않는다 — 실패한 화면의 이전 정상본까지 지워지고 그 자리를
+  // 다시 채울 수 없다. 전량 실패도 missing으로 걸린다. 화면이 0장인 정상 결과에서는
+  // 그대로 돌아 디렉토리를 비운다.
+  const stale = missing === 0 ? pruneStale(opts.images, written) : 0;
   writeGallery(targets, opts);
   return { done, missing, stale };
 }
@@ -428,15 +437,23 @@ const screens = groups.reduce((n, g) => n + g.screens.length, 0);
 const specs = groups.reduce((n, g) => n + g.specs.length, 0);
 console.log(`${opts.out}: 섹션 ${groups.length}개 · 화면 ${screens}개 · 기획 설명 ${specs}건`);
 
+let incomplete = false;
 if (opts.images) {
   const { done, missing, stale } = await downloadImages(groups, opts, token);
+  incomplete = missing > 0;
   const notes = [missing ? `렌더 실패 ${missing}장` : '', stale ? `이전 산출물 ${stale}장 삭제` : '']
     .filter(Boolean)
     .join(', ');
   console.log(`${opts.images}: PNG ${done}장${notes ? ` (${notes})` : ''} + index.html`);
 }
 
-if (opts.state) {
+if (incomplete) {
+  console.log('일부 화면을 받지 못해 version을 기록하지 않는다 — 다음 실행이 다시 받는다.');
+}
+
+// 부분 실패를 완료로 기록하면 다음 실행이 version 게이트에서 조기 종료해, 못 받은 PNG가
+// 영구히 복구되지 않는다. 기록하지 않으면 state가 구 version으로 남아 다음 실행이 다시 받는다.
+if (opts.state && !incomplete) {
   mkdirSync(join(opts.state, '..'), { recursive: true });
   writeFileSync(
     opts.state,
