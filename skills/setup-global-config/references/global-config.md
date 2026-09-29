@@ -14,14 +14,13 @@ Only two things belong in this file: user policy the execution environment does 
 
 ## Execution Boundary
 
-- Default to design/planning mode. Define success criteria before implementation.
+- Without a modification request, the deliverable is analysis or a plan; stop there. Define success criteria before multi-step implementation.
 - Review verbs (`review`, `검토`, `확인`, `분석`, `감사`, `리뷰`) mean read-only inspect. Modification verbs (`수정`, `고쳐`, `해결`, `반영`, `구현`, `업데이트`, `정리`, `커밋`) mean execution.
 - When one request mixes both, inspect first to establish evidence, then mutate only the explicitly requested scope. A review verb does not cancel an explicit modification request, and a modification verb does not authorize unrelated fixes.
 
 ## Inspect Before Asking
 
-- Read-only inspection is allowed without confirmation.
-- Do not ask for what is available from the workspace, git state, logs, config, runtime data, local tooling, sibling repos, remotes, CLIs, or env/config files.
+- Inspect read-only without confirmation, and do not ask for anything the workspace, git state, logs, config, runtime data, sibling repos, remotes, or CLIs can answer.
 - Before introducing an external identifier or running a project script, read its primary source: schema, env/config, OpenAPI/controller, package exports, manifest, runtime versions.
 - For reviews and audits, inspect the full relevant range rather than a convenient sample, truncated tail, summary, generated view, or secondary claim. Cite evidence as file:line or the exact command run.
 - If an inspect-mode item cannot be closed by inspection, report `unresolved: <reason>` and continue without creating a confirmation request.
@@ -32,23 +31,23 @@ Only two things belong in this file: user policy the execution environment does 
 - Keep each fact next to the code that owns it — restatements and comment-to-comment references both drift from what they describe.
 - Delete commented-out code and disabled tests instead of parking them; version control already holds the history, while a disabled block reads as intent rather than removal.
 - Let the declared toolchain own installs: `uv` for Python packages, `mise` for language and tool versions. Do not reach for `pip install` or ad-hoc global installers.
-- Do not hide problems with `as any`, skipped tests, `--no-verify`, dependency overrides, or scattered ignore comments unless the tradeoff is explicit.
+- Do not hide problems with `as any`, skipped tests, `--no-verify`, dependency overrides, or scattered ignore comments unless the diff or commit body states the tradeoff.
 - When a failing dependency is owned and its source is available, trace it to the upstream owner instead of accumulating a downstream workaround. Fix upstream only when that repo is in scope; otherwise report the boundary before cross-repo mutation.
 
 ## Verification And Workspace Identity
 
 - After resume, compaction, handoff, or any context reset, re-check `pwd`, `git rev-parse --show-toplevel`, branch, and working-tree state before mutation. Delegated work gets an exact working directory and scope, and the delegate repeats the same check before editing or committing.
-- Delegate in small sequential batches of one or two. Large parallel fan-outs exhaust the session budget and end in partial failure, putting total throughput below sequential execution.
-- Pin the locale with `LC_ALL=C` when sorting or deduplicating text containing non-ASCII characters. Default collation treats distinct strings as equal and drops them, so the comparison reports a false pass. Count extracted items independently against the source before trusting the result.
+- Delegate only large, independent work — not tasks a few tool calls finish, and not checks of your own work. Run at most one or two delegates at a time: large parallel fan-outs have exhausted the session budget and ended in partial failure, below sequential throughput.
+- Pin the locale with `LC_ALL=C` when sorting or deduplicating text containing non-ASCII characters. Default collation treats distinct strings as equal and drops them, so the comparison reports a false pass.
 
 ## Git
 
 - Before committing, switching branches, integrating, or rewriting history, inspect tracked and untracked changes and stage only the requested scope.
 - Never delete, overwrite, move, restore, or clean untracked files unless the user explicitly requests that exact action. Treat unexpected tracked changes as user-owned too.
 - Committing a verified logical unit needs no prior confirmation. The gate covers publication, not the commit.
-- Run non-force `git push` only when the current request explicitly asks to `push`, `publish`, `deploy`, or `promote`. A request to implement, fix, commit, or prepare a release does not imply publication.
+- Run non-force `git push` only when the current request explicitly asks to `push`, `publish`, `deploy`, or `promote`: a push is visible to others and triggers CI and deploy pipelines, so the owner checks and dogfoods locally first. A request to implement, fix, commit, or prepare a release does not imply publication.
 - Before rewriting commit history, fetch the relevant remote and prove the affected commits are local-only relative to the intended upstream.
-- When a commit is in scope, inspect the nearest repo guidance and a sufficient range of recent commit subjects before choosing message format and language. Repo-local convention overrides any global default.
+- Take commit message format and language from the nearest repo guidance and recent commit subjects.
 - Squash-merge a verified work branch into the integration branch without asking. Rebase it onto the integration tip first so that, after the squash commit, the branch tree equals the integration tree; only then delete the branch (`git branch -D` loses nothing once the trees match). Pushing the result, merging a PR, and promoting a release still need their own explicit request.
 
 ## Documentation
