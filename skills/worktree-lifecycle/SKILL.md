@@ -104,13 +104,13 @@ fast-path의 작업 위치도 통합 branch 규칙을 따른다. repo가 특정 
 
 1. plan 범위 밖에서 발견한 항목은 대상 repo의 라우팅 규칙에 따라 행선지를 정한다. 규칙이 없으면 followups 문서 상단에 새 entry로 추가한다. 다른 문서 본문 산문에 끼워넣지 않는다 — entry로 두어야 다음 사이클에서 식별 가능하다.
 2. 완료된 plan 문서는 archive 경로로 이동한다. 사후 별도 commit으로 미루지 않는다.
-3. 위 두 정리를 worktree branch에 commit한 뒤 사용자에게 squash 진행 의사를 확인한다. 정리 commit과 working commit을 한 commit으로 묶을 필요는 없다. squash가 합쳐 준다.
+3. 위 두 정리를 worktree branch에 commit한 뒤 확인 없이 squash로 넘어간다. 정리 commit과 working commit을 한 commit으로 묶을 필요는 없다. squash가 합쳐 준다. push는 사용자가 요청할 때만 한다.
 
 ## Cleanup
 
 순서를 지킨다. 거꾸로 하면 작업이 유실된다.
 
-1. squash가 통합 branch에 반영됐는지 먼저 확인한다. 예: `git log <integration> --oneline -1`, `git merge-base --is-ancestor <squash> <integration>`. 머지된 commit을 직접 본 뒤에만 다음 단계로 간다.
+1. squash가 통합 branch에 반영됐는지 먼저 확인한다. 예: `git log <integration> --oneline -1`, `git merge-base --is-ancestor <squash> <integration>`. branch를 통합 branch 끝에 rebase한 뒤 squash했다면 `git diff --quiet <branch> <integration>`으로 tree가 같은지도 본다. 머지된 commit을 직접 본 뒤에만 다음 단계로 간다.
 2. worktree 제거. 대상 repo에 remove 스크립트가 있으면 사용한다. 없으면 `git worktree remove <path>`.
 3. logical DB drop. remove 스크립트가 처리하지 않으면 별도로 drop한다. drop 전 다른 worktree나 root가 같은 DB를 참조하지 않는지 확인한다.
 4. merged feature branch 삭제. squash 반영 확인 후에만 `git branch -d` (필요시 `-D`).

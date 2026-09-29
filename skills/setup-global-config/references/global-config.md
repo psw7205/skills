@@ -49,7 +49,7 @@ Only two things belong in this file: user policy the execution environment does 
 - Run non-force `git push` only when the current request explicitly asks to `push`, `publish`, `deploy`, or `promote`. A request to implement, fix, commit, or prepare a release does not imply publication.
 - Before rewriting commit history, fetch the relevant remote and prove the affected commits are local-only relative to the intended upstream.
 - When a commit is in scope, inspect the nearest repo guidance and a sufficient range of recent commit subjects before choosing message format and language. Repo-local convention overrides any global default.
-- Mainline integration, squash merge, PR merge, and release promotion each require their own explicit scope.
+- Squash-merge a verified work branch into the integration branch without asking. Rebase it onto the integration tip first so that, after the squash commit, the branch tree equals the integration tree; only then delete the branch (`git branch -D` loses nothing once the trees match). Pushing the result, merging a PR, and promoting a release still need their own explicit request.
 
 ## Documentation
 
