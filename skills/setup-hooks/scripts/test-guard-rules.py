@@ -84,6 +84,35 @@ CASES = [
         PASS,
         "heredoc body is data, not commands",
     ),
+    # A harmless-looking first segment must not decide the whole command.
+    ("rg -rn foo . && git push --force", DENY, DENY, "deny outranks a repairable cluster"),
+    ("git clean -fd && git push --force", DENY, DENY, "deny outranks a backup"),
+    ("git reset --hard && rg -r foo src/", DENY, DENY, "deny found in a later segment"),
+    # Forcing without the flag.
+    ("git push origin +main", DENY, DENY, "+refspec forces the update"),
+    ("git push origin +HEAD:refs/heads/main", DENY, DENY, "+refspec, full form"),
+    ("git push --mirror origin", DENY, DENY, "--mirror forces every ref"),
+    # The command word behind a prefix or a nested shell.
+    ("env git push --force", DENY, DENY, "env prefix"),
+    ("env -i git push --force", DENY, DENY, "env with its own option"),
+    ("sudo git push --force", DENY, DENY, "sudo prefix"),
+    ("xargs git push --force", DENY, DENY, "xargs prefix"),
+    ("sh -c \"git push --force\"", DENY, DENY, "shell re-entry"),
+    ("bash -lc \"git clean -fd\"", REWRITE, DENY, "shell re-entry, bundled flags"),
+    ("(git push --force)", DENY, DENY, "subshell"),
+    ("{ git push --force; }", DENY, DENY, "brace group"),
+    # `-e` swallows the rest of the bundle, so these are not dry runs.
+    ("git clean -fden", REWRITE, DENY, "-e value is not a dry-run flag"),
+    ("git clean -fdenode_modules", REWRITE, DENY, "-e value spelled out"),
+    ("git clean -n", PASS, PASS, "a real dry run still passes"),
+    ("git clean -fd -e node_modules -n", PASS, PASS, "separate -e leaves -n readable"),
+    # Arithmetic is not a heredoc.
+    ("echo $((1<<2))\ngit clean -fd", REWRITE, DENY, "shift does not mask the next line"),
+    # One operand, and git resolves it against the repository.
+    ("git checkout src/", REWRITE, DENY, "trailing slash reads as a path"),
+    ("git checkout README.md", REWRITE, DENY, "extension reads as a path"),
+    ("git checkout main", PASS, PASS, "a plain branch switch is untouched"),
+    ("git checkout feature/foo", PASS, PASS, "a slash alone is still a branch"),
 ]
 
 
@@ -97,8 +126,15 @@ def main():
             problems.append(f"claude: want {claude_want}, got {claude_got}")
         if codex_got != codex_want:
             problems.append(f"codex: want {codex_want}, got {codex_got}")
-        if claude_got == REWRITE and not rewritten.endswith(command.split("&& ", 1)[-1]):
-            problems.append(f"rewrite dropped the original command: {rewritten!r}")
+        if claude_got == REWRITE:
+            tail = command.split("&& ", 1)[-1]
+            # The original is wrapped in a brace group so that a `;` inside it
+            # cannot step over a failed backup, which is why this looks for the
+            # command within the rewrite rather than at its end.
+            if tail not in rewritten:
+                problems.append(f"rewrite dropped the original command: {rewritten!r}")
+            if not rewritten.rstrip().endswith("}"):
+                problems.append(f"rewrite left the original ungrouped: {rewritten!r}")
         print(f"{'FAIL' if problems else 'ok  '} {why}")
         if problems:
             failures.append(f"  {why}\n    input: {command!r}\n    " + "\n    ".join(problems))

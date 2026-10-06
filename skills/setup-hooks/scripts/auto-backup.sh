@@ -9,6 +9,9 @@ set -uo pipefail
 # and restored, or there was nothing to capture.
 
 LABEL=${1:-command}
+# `git clean -x` also deletes ignored files, which --include-untracked leaves
+# out of the stash. The caller widens the scope when the command reaches them.
+SCOPE=${2:---include-untracked}
 KEEP_RECENT=10
 PRUNE_AFTER_DAYS=7
 
@@ -40,8 +43,9 @@ prune_old_backups() {
 
 before=$(git rev-parse -q --verify refs/stash 2>/dev/null || true)
 
-git stash push --include-untracked \
+git stash push "$SCOPE" \
   -m "auto-backup [$worktree] before $LABEL $(date +%Y%m%d-%H%M%S)" >/dev/null 2>&1
+push_status=$?
 
 after=$(git rev-parse -q --verify refs/stash 2>/dev/null || true)
 
@@ -51,7 +55,17 @@ after=$(git rev-parse -q --verify refs/stash 2>/dev/null || true)
 # `git stash apply` would then restore whatever unrelated entry happens to sit
 # on top of the stack into a clean tree, leaving conflict markers and an
 # unmerged index behind for a command that was only meant to be a no-op.
+#
+# A failed push looks identical on refs/stash, so the exit status has to be
+# read too. A repository with no initial commit cannot stash at all: without
+# this branch the gate opened on "nothing to back up" while the tree still held
+# every file the original command was about to delete.
 if [ "$after" = "$before" ]; then
+  if [ "$push_status" -ne 0 ] && [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+    printf '[auto-backup] 백업 생성에 실패했다. %s 는 실행하지 않았다.\n' "$LABEL" >&2
+    printf '[auto-backup] git stash push 가 거부했다 — 초기 커밋이 없는 저장소인지 확인하라.\n' >&2
+    exit 1
+  fi
   exit 0
 fi
 

@@ -16,6 +16,7 @@ import sys
 
 try:
     from guard_rules import classify
+    from shell_lex import mask_literals
 except Exception:
     # A broken install must not make every Bash call fail. Guarding nothing is
     # better than a traceback on stderr before each command.
@@ -27,7 +28,10 @@ SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 BACKUP = shlex.quote(str(SCRIPT_DIR / "auto-backup.sh"))
 
 # The whole `cd a && cd b &&` chain stays in front of the backup so the stash
-# lands in the repository the original command actually targets.
+# lands in the repository the original command actually targets. Matched
+# against the masked copy, never the original: `cd "x&& y" && git clean -fd`
+# has an && inside an argument, and cutting there would bury the backup call in
+# that argument and run the destructive command with no backup at all.
 CD_PREFIX = re.compile(r"((?:cd\s+[^&|;]+&&\s*)+)(.+)", re.DOTALL)
 
 REWRITE_MESSAGE = (
@@ -56,15 +60,23 @@ def emit(message, decision):
     )
 
 
-def rewrite(cmd, label):
+def rewrite(cmd, label, scope=""):
     prefix = ""
     rest = cmd
-    match = CD_PREFIX.match(cmd)
+    match = CD_PREFIX.match(mask_literals(cmd))
     if match:
-        prefix, rest = match.group(1), match.group(2)
+        cut = match.end(1)
+        prefix, rest = cmd[:cut], cmd[cut:]
+    args = f"{BACKUP} {shlex.quote(label)}"
+    if scope:
+        args += f" {shlex.quote(scope)}"
     # `&&`, not `;`: when the backup cannot put the working tree back, the
-    # destructive command must not run over the gap it left.
-    backed_up = f"{prefix}bash {BACKUP} {shlex.quote(label)} && {rest}"
+    # destructive command must not run over the gap it left. The brace group is
+    # what makes that hold for every segment -- without it `echo hi ; git reset
+    # --hard` would gate only the echo and run the reset anyway. The closing
+    # brace goes on its own line so a trailing heredoc still finds its
+    # terminator.
+    backed_up = f"{prefix}bash {args} && {{\n{rest}\n}}"
     emit(REWRITE_MESSAGE % label, {"updatedInput": {"command": backed_up}})
 
 
@@ -75,6 +87,10 @@ def main():
         return 0
 
     cmd = ((data or {}).get("tool_input") or {}).get("command")
+    # An argv list is the same command in another shape. Reading only strings
+    # would let `["bash", "-lc", "git push --force"]` past the guard untouched.
+    if isinstance(cmd, (list, tuple)):
+        cmd = " ".join(str(part) for part in cmd)
     if not isinstance(cmd, str) or not cmd:
         return 0
 
@@ -91,7 +107,7 @@ def main():
     if message:
         emit(message, {"permissionDecision": "deny"})
     else:
-        rewrite(cmd, verdict.label)
+        rewrite(cmd, verdict.label, verdict.scope)
     return 0
 
 

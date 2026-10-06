@@ -152,5 +152,41 @@ rc=$?
 cd - >/dev/null
 check "exit 0 so the command is not blocked" 0 "$rc"
 
+echo '--- case 7: stash push refused'
+# No initial commit means `git stash push` fails. refs/stash does not move
+# either, which is what "nothing to back up" looks like, so a gate that reads
+# only the ref opens on a tree that still holds every file.
+mkdir -p "$TMP/noinit"
+cd "$TMP/noinit"
+git init -q .
+echo "precious" >draft.txt
+bash "$BACKUP" "git clean" >/dev/null 2>&1
+rc=$?
+cd - >/dev/null
+check "exit 1 blocks a command it could not back up" 1 "$rc"
+check "the file is still there" "precious" "$(cat "$TMP/noinit/draft.txt")"
+
+echo '--- case 8: nothing to lose'
+mkdir -p "$TMP/empty"
+cd "$TMP/empty"
+git init -q .
+bash "$BACKUP" "git clean" >/dev/null 2>&1
+rc=$?
+cd - >/dev/null
+check "an empty tree is not worth blocking" 0 "$rc"
+
+echo '--- case 9: ignored files need the wider scope'
+mkdir -p "$TMP/ignored"
+cd "$TMP/ignored"
+git init -q .
+git commit -q --allow-empty -m init
+printf 'secret.env\n' >.gitignore
+git add .gitignore && git commit -q -m ignore
+printf 'KEY=1\n' >secret.env
+bash "$BACKUP" "git clean" --all >/dev/null 2>&1
+captured=$(git stash show --include-untracked --name-only "stash@{0}" 2>/dev/null | grep -c 'secret.env' || true)
+cd - >/dev/null
+check "--all reaches an ignored file" 1 "$captured"
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

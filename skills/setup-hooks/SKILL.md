@@ -49,9 +49,9 @@ ${CLAUDE_PLUGIN_ROOT}/skills/setup-hooks/scripts/rg-replace-flag-fix.py
 
 ### Claude Code
 
-파괴적이지만 복구 가능한 명령은 차단하지 않고 rewrite한다. 원 명령 앞에 `bash <scripts>/auto-backup.sh '<label>' && `를 붙이는 형태다. 백업 스크립트가 `git stash push --include-untracked`로 백업을 만든 뒤 working tree를 즉시 원복하므로, 원래 명령은 진짜 dirty state에 그대로 실행되어 사용자 의도가 보존되고 stash entry는 복구 지점으로 남는다. stash로 되돌릴 수 없는 것만 deny한다.
+파괴적이지만 복구 가능한 명령은 차단하지 않고 rewrite한다. `bash <scripts>/auto-backup.sh '<label>' && { <원 명령> }` 형태다. 백업 스크립트가 `git stash push`로 백업을 만든 뒤 working tree를 즉시 원복하므로, 원래 명령은 진짜 dirty state에 그대로 실행되어 사용자 의도가 보존되고 stash entry는 복구 지점으로 남는다. 기본 scope는 `--include-untracked`이고, `git clean -x`/`-X`처럼 ignored 파일까지 지우는 명령에는 판정이 `--all`을 실어 보낸다. stash로 되돌릴 수 없는 것만 deny한다.
 
-`;`가 아니라 `&&`인 것이 계약의 절반이다. working tree를 되돌리지 못했으면 스크립트가 non-zero로 끝나 원 명령이 실행되지 않는다. 백업만 남고 tree는 비워진 채 파괴적 명령이 도는 경로가 없다.
+`;`가 아니라 `&&`인 것, 그리고 원 명령이 brace group 안에 들어가는 것이 계약의 절반이다. working tree를 되돌리지 못했으면 스크립트가 non-zero로 끝나 원 명령이 실행되지 않는다. group이 없으면 `&&`는 첫 세그먼트만 묶어서, `echo hi ; git reset --hard`의 `;` 뒤가 백업 실패를 넘어 실행된다. 닫는 중괄호를 별도 줄에 두는 이유는 원 명령 끝에 heredoc이 올 수 있어서다.
 
 | 명령 | 동작 |
 |------|------|
@@ -196,20 +196,30 @@ Codex 대상으로 "codex hook 설치해줘"라고 요청하면:
 1. `~/.codex/hooks.json`이 있는지 확인한다.
 2. `install-codex-hook.sh install`을 실행한다.
 3. `jq`로 `~/.codex/hooks.json`을 파싱하고 `guard-commands-codex.py` handler가 하나만 있는지 확인한다.
-4. 설정 변경 후 Codex 재시작 필요.
+4. **`~/.codex/config.toml`에 `[features] codex_hooks = true`가 있는지 확인한다.** 없으면 hooks.json을 써도 Codex가 읽지 않는다. 설치 스크립트가 경고를 내지만 파일을 대신 고치지는 않는다.
+5. 설정 변경 후 Codex 재시작 필요.
 
 ## Gotchas
 
 - settings.json은 세션 시작 시 로드된다. 설치/제거 후 반드시 재시작.
-- 판정은 세그먼트의 command word 기준이므로 `bash -c "git clean -fd"`, `$(git clean -fd)`, `xargs git clean` 형태는 통과한다. 이 훅은 실수 방지 장치이지 sandbox가 아니다.
-- heredoc 본문도 같은 이유로 통과한다. `bash <<EOF`로 넘긴 파괴적 명령은 걸리지 않는다. 본문을 명령으로 읽으면 `cat > notes.md <<EOF` 같은 문서 작성이 파괴적 명령으로 판정되는 쪽이 훨씬 흔하고, 그 오탐은 문서를 쓰려던 명령 앞에 stash를 실행한다.
+- Codex 훅은 `[features].codex_hooks = true`가 없으면 아예 실행되지 않는다. hooks.json은 정상적으로 쓰이고 설치도 성공으로 보고되므로, 이 플래그를 확인하지 않으면 훅이 있다고 믿는 채로 아무 보호도 받지 못한다.
+- Codex의 shell 도구는 rollout 로그에서 `exec`, 훅 payload에서 `Bash`로 나타난다. matcher는 regex이므로 `Bash|exec`로 양쪽을 덮고, 스크립트의 `SHELL_TOOLS`가 다시 거른다.
+- 판정은 세그먼트의 command word 기준이다. `env`·`sudo`·`nohup`·`xargs` 같은 투명 래퍼, 서브셸 `( )`, brace group `{ }`, `sh -c "..."`의 인자 문자열까지는 읽는다. 읽지 못하는 것은 값이 실행 시점에 정해지는 형태다 — `$(...)` 치환 결과, 변수에 담긴 명령, 파일에서 읽어 실행하는 스크립트. 이 훅은 실수 방지 장치이지 sandbox가 아니고, 우회를 작정한 입력을 막지 않는다.
+- heredoc 본문은 통과한다. `bash <<EOF`로 넘긴 파괴적 명령은 걸리지 않는다. 본문을 명령으로 읽으면 `cat > notes.md <<EOF` 같은 문서 작성이 파괴적 명령으로 판정되는 쪽이 훨씬 흔하고, 그 오탐은 문서를 쓰려던 명령 앞에 stash를 실행한다.
+- 한 명령에 여러 판정이 걸리면 가장 나쁜 것이 이긴다. deny 대상(`git push --force`, `rg --replace`)이 rewrite 대상보다 앞서고, 교정 가능한 `rg -r` 클러스터가 가장 뒤다. 첫 세그먼트로 판정하면 `rg -rn foo . && git push --force`가 교정 훅에 넘어가면서 force push까지 통과한다.
+- 재작성은 원 명령을 brace group으로 감싼다. `auto-backup.sh ... && { <원 명령> }` 형태라야 `echo hi ; git reset --hard`처럼 `;`로 분리된 파괴적 명령까지 백업 실패에 막힌다. 닫는 중괄호가 별도 줄에 있는 이유는 원 명령 끝에 heredoc이 올 수 있어서다.
 - stdin이 JSON이 아니거나 sibling 모듈을 import할 수 없으면 훅은 조용히 exit 0 한다. 훅이 매 Bash 호출마다 에러를 내는 것이 차단 실패보다 나쁘다. 세 훅 모두 `python3`를 요구하고, `jq`는 더 이상 훅 실행에 필요하지 않다(`install-codex-hook.sh`는 여전히 사용).
 - `rg -rn` 클러스터 교정은 Claude Code 전용이다. Codex는 rewrite를 지원하지 않아 같은 입력을 deny하고 교정 방법만 안내한다.
 - 판정 로직을 고치면 `python3 test-guard-rules.py`를 돌린다. 두 훅을 subprocess로 실행해 Claude Code의 rewrite/deny/pass와 Codex의 deny/pass를 함께 확인하므로, 정책 분기까지 회귀 판정 범위에 들어간다.
 - stdin은 판정보다 먼저 읽는다. 읽기 전에 빠져나가면 호출자 쪽 write가 EPIPE로 실패한다.
 - `git checkout <ref> <path>`는 `--` 없이도 파일을 덮어쓴다. DWIM branch 전환과의 구분은 operand 개수이고, `-b`/`-B`/`--orphan`이 있으면 두 번째 operand는 start point이므로 통과한다.
 - `git push --force`는 stash로 보호할 수 없어 deny한다. `--force-with-lease`는 토큰 단위 비교라 `--force` 룰에 걸리지 않지만, 둘을 함께 쓰면 `--force`가 우선하므로 deny된다.
+- force는 플래그로만 오지 않는다. `git push origin +main`의 `+` refspec과 `--mirror`가 같은 파괴를 하므로 같이 deny한다.
+- `-e`는 클러스터의 나머지를 값으로 삼킨다. `git clean -fden`은 dry-run이 아니라 `-e n`이고 실제로 지운다. 플래그 탐색이 값 소비 플래그에서 멈추지 않으면 예외 규칙이 통째로 뚫린다.
+- `$((1<<2))`의 `<<`는 시프트이지 heredoc이 아니다. 렉서가 산술 구간을 추적하지 않으면 종료 라인이 없는 heredoc으로 읽어 **그 뒤 명령 전부를 본문으로 가린다**.
 - `git stash push`는 clean tree에서 아무것도 저장하지 않고도 exit 0이다. 그래서 `auto-backup.sh`는 exit code가 아니라 `refs/stash` before/after 비교로 백업 생성 여부를 판정한다. exit code로 판정하면 뒤따르는 `git stash apply`가 stack 맨 위의 **무관한 stash**를 clean tree에 쏟아 conflict marker와 unmerged index를 남긴다. 아무것도 파괴할 것이 없던 명령이 tree를 깨뜨리는 경로다.
+- 그 비교만으로는 부족하다. stash push가 **실패**해도 `refs/stash`는 그대로라 "백업할 것이 없었다"와 구분되지 않는다. 초기 커밋이 없는 레포가 그 경우이고, 그때 게이트가 열리면 트리의 파일을 전부 들고 있는 채로 원 명령이 돈다. 그래서 exit code도 함께 읽고, 실패했는데 `git status --porcelain`이 비어 있지 않으면 차단한다.
+- `git clean -x`/`-X`는 ignored 파일까지 지우는데 `--include-untracked` stash는 그것을 담지 않는다. 판정이 `--all` scope를 실어 보내고 `auto-backup.sh`가 두 번째 인자로 받는다. 이 연결이 끊기면 "백업 생성" 메시지를 내면서 `.env`와 `build/`를 영구 삭제한다.
 - `cd a && cd b && git clean` 같은 체인은 cd 전체가 backup 앞에 유지된다. 그렇지 않으면 stash가 엉뚱한 레포에 생긴다. 변수 대입이나 개행이 섞인 명령은 cd 인식에 실패할 수 있고, 그때 백업은 원 명령과 다른 레포에서 돌아 그 tree를 원복한 뒤 stash 하나를 남긴다. stderr 한 줄이 그 사실을 드러내고 retention이 정리한다.
 - 백업을 만들었을 때 `auto-backup.sh`는 stderr에 한 줄을 남긴다. 이 출력을 지우면 엉뚱한 레포에 생긴 백업이 조용히 쌓인다.
 - `git stash drop`은 그보다 큰 index를 한 칸씩 당긴다. retention이 높은 index부터 지우는 이유이고, 낮은 쪽부터 지우면 두 번째 drop이 엉뚱한 stash를 지운다.

@@ -23,7 +23,9 @@ HEREDOC = re.compile(r"<<-?\s*(?P<quote>['\"]?)(?P<delim>[\w.-]+)(?P=quote)")
 
 # Operators that end one command. A single `&` covers both backgrounding and the
 # second character of `&&`; runs collapse because empty segments are dropped.
-SEPARATORS = "|;&\n"
+# Parentheses are here because a subshell is its own command: without them
+# `(git push --force)` yields the token `(git`, which matches no rule.
+SEPARATORS = "|;&\n()"
 
 
 def _heredoc_body_end(cmd, start, delim):
@@ -50,6 +52,7 @@ def scan(cmd):
     # keeps its empty operand instead of losing a token.
     started = False
     pending = []  # heredoc delimiters whose bodies have not arrived yet
+    arith = 0  # depth of `$((...))`, where `<<` is a shift and not a redirection
     i = 0
     n = len(cmd)
 
@@ -93,7 +96,26 @@ def scan(cmd):
             i = j + 1
             continue
 
-        if cmd.startswith("<<", i) and not cmd.startswith("<<<", i):
+        # Arithmetic is read before both the heredoc and the separator rules:
+        # `$((1<<2))` shifts, and its parentheses group an expression rather
+        # than opening a subshell. Missing this masks the rest of the command
+        # as a body that never terminates, hiding every command after it.
+        if cmd.startswith("$((", i) or cmd.startswith("((", i):
+            span = 3 if cmd[i] == "$" else 2
+            arith += 1
+            word.append(cmd[i:i + span])
+            started = True
+            i += span
+            continue
+
+        if arith and cmd.startswith("))", i):
+            arith -= 1
+            word.append("))")
+            started = True
+            i += 2
+            continue
+
+        if arith == 0 and cmd.startswith("<<", i) and not cmd.startswith("<<<", i):
             m = HEREDOC.match(cmd, i)
             if m:
                 # The redirection is not an argument, and what follows it is

@@ -23,7 +23,10 @@ SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 # The reason text is meant to be copied and run, so it carries shell quoting.
 BACKUP = shlex.quote(str(SCRIPT_DIR / "auto-backup.sh"))
 
-SHELL_TOOLS = ("", "Bash", "shell", "shell_command", "local_shell", "exec_command")
+# Codex names its shell tool `exec` in the rollout log and `Bash` in the hook
+# payload depending on the layer, so both spellings have to be accepted. The
+# empty string covers a payload that omits the field entirely.
+SHELL_TOOLS = ("", "Bash", "shell", "shell_command", "local_shell", "exec_command", "exec")
 
 DENY_REASONS = {
     "force-push": (
@@ -85,6 +88,10 @@ def main():
 
     tool_input = data.get("tool_input") or {}
     cmd = tool_input.get("command") or tool_input.get("cmd")
+    # An argv list is the same command in another shape. Reading only strings
+    # would let `["bash", "-lc", "git push --force"]` past the guard untouched.
+    if isinstance(cmd, (list, tuple)):
+        cmd = " ".join(str(part) for part in cmd)
     if not isinstance(cmd, str) or not cmd:
         return 0
 

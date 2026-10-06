@@ -40,7 +40,11 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 HOOK_SCRIPT="${SETUP_HOOKS_CODEX_SCRIPT:-$SCRIPT_DIR/guard-commands-codex.py}"
 CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 HOOKS_FILE="${CODEX_HOOKS_FILE:-$CODEX_HOME/hooks.json}"
-HOOK_COMMAND="python3 $HOOK_SCRIPT"
+# Quoted, because this string is handed to a shell. An install path holding a
+# space would otherwise register a command that splits into two words, and the
+# hook would fail to start on every call -- which reads as "allow", leaving the
+# guard silently off.
+printf -v HOOK_COMMAND 'python3 %q' "$HOOK_SCRIPT"
 
 if [ "$ACTION" = "install" ]; then
   if [ ! -f "$HOOK_SCRIPT" ]; then
@@ -93,7 +97,7 @@ jq --arg action "$ACTION" --arg command "$HOOK_COMMAND" '
   if $action == "install" then
     .hooks.PreToolUse += [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|exec",
         "hooks": [
           {
             "type": "command",
@@ -111,6 +115,12 @@ jq --arg action "$ACTION" --arg command "$HOOK_COMMAND" '
 ' "$SOURCE_JSON" >"$UPDATED_JSON"
 
 umask 077
+# Follow a symlink rather than replace it: a dotfiles-managed hooks.json is a
+# link into the user's repository, and moving over it would leave the tracked
+# file without the hook the user just installed.
+if [ -L "$HOOKS_FILE" ]; then
+  HOOKS_FILE=$(readlink -f -- "$HOOKS_FILE" 2>/dev/null || python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$HOOKS_FILE")
+fi
 mv "$UPDATED_JSON" "$HOOKS_FILE"
 trap - EXIT
 rm -f "$SOURCE_JSON"
@@ -118,6 +128,19 @@ rm -f "$SOURCE_JSON"
 if [ "$ACTION" = "install" ]; then
   echo "Installed Codex guard hook: $HOOKS_FILE"
   echo "Hook command: $HOOK_COMMAND"
+  # Codex reads hooks.json only when the feature is on. Without this the file
+  # is written, the install reports success, and nothing ever runs -- a guard
+  # that looks installed but is not is worse than no guard, because it is
+  # trusted.
+  CONFIG_TOML="$CODEX_HOME/config.toml"
+  if ! grep -Eq '^[[:space:]]*codex_hooks[[:space:]]*=[[:space:]]*true' "$CONFIG_TOML" 2>/dev/null; then
+    echo >&2
+    echo "WARNING: [features].codex_hooks is not enabled in $CONFIG_TOML" >&2
+    echo "The hook will not run until you add it:" >&2
+    echo >&2
+    echo "  [features]" >&2
+    echo "  codex_hooks = true" >&2
+  fi
 else
   echo "Removed Codex guard hook from: $HOOKS_FILE"
 fi
