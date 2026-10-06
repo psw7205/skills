@@ -12,9 +12,10 @@
 // md 서두에 파일 version을 기록한다. 이 줄이 "마지막으로 받은 시점"의 마커라서, 이미지 캐시(.sync-state.json)가
 // 없는 머신에서도 무변경 조기 종료와 snapshot-delta의 게이트가 md만으로 선다.
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 
 const API = 'https://api.figma.com/v1';
 const SCREEN_MIN_WIDTH = 1000;
@@ -49,16 +50,51 @@ function loadConfig(path) {
     fail(`설정 파일을 읽을 수 없다: ${path} (${e.message})`);
   }
   const dir = dirname(resolve(path));
+  const root = repoRoot(dir);
+  // 이 설정 파일은 repo에 commit되어 git으로 공유된다(references/config.md). 여기 담긴
+  // 경로는 실행자가 타이핑한 값이 아니라 repo 내용에서 오므로, 덮어쓰기 대상은 가둔다.
+  // 플래그는 실행자가 직접 준 값이라 이 검사의 대상이 아니다.
   const at = (p) => (p ? resolve(dir, p) : '');
+  const within = (abs, bases) =>
+    bases.some((base) => {
+      if (!base) return false;
+      const rel = relative(base, abs);
+      return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
+    });
+
+  const out = at(raw.out);
+  // snapshot-delta 는 out 이 repo 밖이면 거부한다(snapshot-delta.mjs). 여기서도 막아야
+  // 두 스크립트가 같은 설정을 같게 읽고, 공유 설정 한 줄이 repo 밖 파일을 덮어쓰지 못한다.
+  if (out && !within(out, [root])) {
+    fail(`설정 out 이 repo 밖을 가리킨다: ${out} (repo=${root})`);
+  }
+  // images 는 용량 때문에 repo 밖을 권장하므로 가두지 않는다. 대신 pruneStale 이
+  // 이 스크립트가 만든 이름만 지운다.
+  const images = at(raw.images);
+  const state = at(raw.state);
+  if (state && !within(state, [root, images])) {
+    fail(`설정 state 는 repo 안이나 images 아래여야 한다: ${state}`);
+  }
   return {
     fileKey: raw.fileKey,
     nodeId: raw.nodeId,
     title: raw.title,
     fileSlug: raw.fileSlug,
-    out: at(raw.out),
-    images: at(raw.images),
-    state: at(raw.state),
+    out,
+    images,
+    state,
   };
+}
+
+function repoRoot(dir) {
+  try {
+    return execFileSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return dir;
+  }
 }
 
 const compact = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== ''));
@@ -345,10 +381,15 @@ async function downloadImages(groups, opts, token) {
   return { done, missing, stale };
 }
 
+// screenFileName이 붙이는 2자리 index 접두사. 이 패턴에 맞는 것만 지워, images가 잘못
+// 지정돼도 이 스크립트가 만들지 않은 PNG는 남는다. 화면이 0장인 run이 디렉토리를 비우는
+// 경로가 있어서, 대상을 이름으로 한 번 더 좁힌다.
+const GENERATED_PNG = /^\d{2,}_.*\.png$/;
+
 function pruneStale(dir, keep) {
   let removed = 0;
   for (const name of readdirSync(dir)) {
-    if (!name.endsWith('.png') || keep.has(name)) continue;
+    if (!GENERATED_PNG.test(name) || keep.has(name)) continue;
     unlinkSync(join(dir, name));
     removed++;
   }

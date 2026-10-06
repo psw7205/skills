@@ -5,12 +5,15 @@ description: >
   console.log 출력 복구, 네트워크 요청 모니터링, InspectorProxy 타겟 디스커버리,
   브릿지 스크립트를 통한 터미널 스트리밍을 다룬다.
   release 빌드 크래시(Hermes minify로 스택이 안 풀릴 때)를 debug+Metro로 전환해
-  CDP/LogBox로 정확한 에러를 잡는 셋업(디버그 빌드·adb reverse·권한 우회·타겟 선택)도 포함.
+  CDP/LogBox로 정확한 에러를 잡는 셋업(디버그 빌드·adb reverse·권한 우회·타겟 선택)과
+  실기기 debug 빌드를 막는 툴체인 함정(Gradle·JBR, CocoaPods·Ruby, 좀비 캐시 경로)도 포함.
   "console.log가 안 보여", "Metro 로그가 안 나와", "RN 로그가 안 찍혀",
   "RN console.log not showing", "Metro logs missing", "CDP 연결",
   "DevTools 연결 안 됨", "RN network debugging", "RN 디버깅 런북",
   "RN 크래시 원인 분석", "release 크래시가 안 잡혀", "debug 빌드로 에러 확인",
-  "RedBox 에러 캡처", "화면 진입하면 죽어"
+  "RedBox 에러 캡처", "화면 진입하면 죽어",
+  "실기기 빌드 안 돼", "pod install 에러", "gradle sync 실패", "INSTALL_FAILED_UPDATE_INCOMPATIBLE",
+  "Negative time", "RN device build fails"
   등에서 트리거.
 ---
 
@@ -47,7 +50,9 @@ adb shell monkey -p <pkg> -c android.intent.category.LAUNCHER 1   # 실행 (am s
 
 - **debug appId suffix 주의**: `applicationIdSuffix ".dev"` 등이면 debug는 release와 **별개 패키지**로 설치된다. 타겟/실행/권한 부여 모두 그 `.dev` 패키지로.
 - **권한 게이트 우회**: 디버그할 화면이 권한 동의 화면 뒤에 있으면 시스템 다이얼로그를 누르는 대신 `adb shell pm grant <pkg> android.permission.CAMERA`(등 필요한 dangerous 권한)로 미리 부여하면 통과한다. (`requestMultiple`이 전부 granted면 바로 진행.)
-- 그 후 debug 앱을 실행하면 `/json/list`에 타겟이 뜬다.
+- **`INSTALL_FAILED_UPDATE_INCOMPATIBLE`**: 같은 applicationId가 release 키로 서명돼 이미 깔려 있다. `adb uninstall <pkg>` 후 설치한다(기기의 앱 데이터가 지워진다).
+- 그 후 debug 앱을 실행하면 `/json/list`에 타겟이 뜬다. iOS 실기기는 Metro에 닿지 못하면 내장 번들로 돌아 타겟이 안 뜬다.
+- debug 빌드 자체가 기기에 안 올라가면(Gradle sync, `pod install`, 서명, 마지막 번들·hermesc 단계 실패) `references/device-build-toolchain.md`를 본다.
 
 ### 1. Target 확인
 
@@ -103,3 +108,4 @@ echo '{"id":1,"method":"Runtime.enable"}' | websocat "$WS_URL"
 
 - `references/inspector-proxy.md` — `/json/list` 응답 파싱이나 WebSocket URL 직접 구성 시 참조
 - `references/cdp-domains.md` — `consoleAPICalled` args 파싱이나 `Runtime.evaluate` 사용 시 참조
+- `references/device-build-toolchain.md` — 실기기 debug 빌드·설치가 툴체인 문제로 막힐 때(repo 이동 후 좀비 경로, JBR·Gradle, Ruby 3.4·CocoaPods, `.xcode.env.local`, fmt·clang, stale APK)

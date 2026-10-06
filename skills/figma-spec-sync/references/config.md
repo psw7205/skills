@@ -30,6 +30,8 @@ export FIGMA_TOKEN=<token>
 
 경로는 전부 설정 파일이 있는 디렉토리 기준이다. CLI 플래그(`--out`, `--images`, `--base` 등)는 설정을 덮어쓰고 cwd 기준으로 해석된다.
 
+이 파일은 repo에 commit되어 공유되므로 여기 적힌 경로는 실행자가 직접 준 값이 아니다. 그래서 `out`은 repo 안이어야 하고(`snapshot-delta`도 같은 조건을 요구한다), `state`는 repo 안이거나 `images` 아래여야 한다. `images`는 용량 때문에 repo 밖을 권장하므로 가두지 않으며, 대신 stale 정리는 이 스크립트가 만든 `NN_이름.png` 형태만 지운다. repo 밖 임의 경로가 필요하면 설정이 아니라 CLI 플래그로 준다.
+
 ## 예시
 
 ```json
