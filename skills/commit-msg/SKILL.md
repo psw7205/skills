@@ -48,6 +48,10 @@ git log --oneline -10
 
 최근 커밋의 패턴(prefix, 언어, 길이, 형식)을 파악하고 일관성을 유지한다. 자기 스타일을 강요하지 않는다.
 
+## Body
+
+subject만으로 변경이 설명되면 body를 만들지 않는다. body에는 diff가 보여주지 못하는 것만 담는다 — non-obvious WHY, breaking change·migration, 보안·운영 영향, revert 맥락, issue/ticket 참조. 파일 목록, "Updated…" 식 diff 재서술, 작업 단계, 테스트 실행 과정은 diff와 로그가 이미 말하므로 넣지 않는다. 필요할 때도 2–4개 bullet 안에서 끝낸다.
+
 ## 출력
 
 아래 형식으로 출력한다:
@@ -58,6 +62,8 @@ git log --oneline -10
 
 1. `<메시지 후보 1>`
 2. `<메시지 후보 2>` (선택지가 있을 때만)
+
+body가 있는 후보는 fenced block으로 subject, 빈 줄, body를 그대로 보인다.
 
 ## Gotchas
 

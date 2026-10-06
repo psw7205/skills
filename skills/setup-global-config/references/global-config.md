@@ -11,6 +11,7 @@ Only two things belong in this file: user policy the execution environment does 
 - For raw or copyable Markdown requests, return the content inside a fenced `markdown` block.
 - Do not stack consecutive structured-choice prompts. Discuss in plain prose, compress the real fork into a single decision, and pick among same-pattern implementation candidates yourself with a one-line rationale.
 - Type non-ASCII text directly as UTF-8. Never hand-write `\uXXXX` escapes; a miscomputed code point silently renders as a different character.
+- Size the completion report to the change: what changed, one line per concern; how it was verified; any caveat or failure. It does not explain how the new code works, which the diff already shows. Full explanations are for design decisions, tradeoffs, and unexpected findings.
 
 ## Execution Boundary
 
@@ -29,9 +30,14 @@ Only two things belong in this file: user policy the execution environment does 
 ## Implementation
 
 - Prefer the ecosystem's standard, idiomatic solution; a smaller diff is not a reason to pick a non-standard one. Match existing style, but point out a defective convention instead of copying it.
+- Deliver the requested change as the smallest diff that stays correct, readable, and safe. Fix the root cause, not the symptom. Never shrink a diff by dropping a trust-boundary check, error handling that recovers or adds context, or accessibility.
+- Before adding code, check whether the codebase, standard library, platform, or an installed dependency already does it. A new dependency, file, abstraction, or configuration flag needs a caller that requires it now, not a possible future one; inline logic used once or twice and extract only at the third repetition, for a real domain concept, or to keep call sites consistent.
+- Guard trust boundaries, not states the contract already rules out. Catch an error only where the code can recover, translate it, or add context; a catch that only logs, swallows, or rethrows unchanged is removed.
+- A test protects behavior that can realistically regress: one focused regression test for a bug fix, none for a rename or constant change, never a restatement of the implementation. Reuse existing fixtures and patterns.
 - Default to no comments. Names, structure, and tests carry the explanation. Write one only for what the reader cannot reconstruct from the code and would otherwise get wrong: a wire or storage contract, a library or platform trap, or why a plausible alternative was rejected. Never restate what the next line does, never label a section, never narrate the change you just made.
 - Keep each fact next to the code that owns it — restatements and comment-to-comment references both drift from what they describe.
 - Delete commented-out code and disabled tests instead of parking them; version control already holds the history, while a disabled block reads as intent rather than removal.
+- Before reporting done, reread only the hunks this change added and delete what they carry without need: comments that restate code, single-use helpers or wrappers, guards for impossible states, tests that mirror the implementation. Leave pre-existing code alone in that pass.
 - Let the declared toolchain own installs: `uv` for Python packages, `mise` for language and tool versions. Do not reach for `pip install` or ad-hoc global installers.
 - Do not hide problems with `as any`, skipped tests, `--no-verify`, dependency overrides, or scattered ignore comments unless the diff or commit body states the tradeoff.
 - When a failing dependency is owned and its source is available, trace it to the upstream owner instead of accumulating a downstream workaround. Fix upstream only when that repo is in scope; otherwise report the boundary before cross-repo mutation.
@@ -55,6 +61,7 @@ Only two things belong in this file: user policy the execution environment does 
 - Run non-force `git push` only when the current request explicitly asks to `push`, `publish`, `deploy`, or `promote`: a push is visible to others and triggers CI and deploy pipelines, so the owner checks and dogfoods locally first. A request to implement, fix, commit, or prepare a release does not imply publication.
 - Before rewriting commit history, fetch the relevant remote and prove the affected commits are local-only relative to the intended upstream.
 - Take commit message format and language from the nearest repo guidance and recent commit subjects.
+- A subject that explains the change stands alone. A body carries only what the diff cannot show: the non-obvious why, a breaking change or migration, a security or operational implication, revert context, or a ticket reference. Never restate the diff or narrate the steps taken. Add an AI attribution trailer only when repo guidance asks for it.
 - Squash-merge a verified work branch into the integration branch without asking. Rebase it onto the integration tip first so that, after the squash commit, the branch tree equals the integration tree; only then delete the branch (`git branch -D` loses nothing once the trees match). Pushing the result, merging a PR, and promoting a release still need their own explicit request.
 
 ## Documentation

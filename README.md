@@ -25,6 +25,7 @@
 |------|------|------------|
 | `plan` | 경량 plan 문서 작성 + "착수 가능성" 기준 리뷰 (구현 디테일 금지) | "plan 써줘", "계획 세워줘", "plan 리뷰해줘", "이 계획 착수 가능해?" |
 | `diff-review` | 변경 집합(diff·staged·PR) read-only 리뷰. 비용 사다리(inline 기본 → 단일 리뷰어 → fan-out은 명시 게이트) → 수정은 self-feedback-loop로 위임 | "코드 리뷰해줘", "이 변경 리뷰", "PR 리뷰", "diff 봐줘" |
+| `diff-trim` | 작업을 마친 diff의 추가 hunk에서 군살(코드 되풀이 주석·1회용 helper·불가능 상태 방어·구현 복제 테스트·요청 밖 구조)을 동작 무변경으로 걷어내는 1회 패스. 검사/정리 모드 | "diff 다이어트", "불필요한 주석 지워", "커밋 전에 정리", "trim the diff" |
 | `codebase-review` | 전체 코드베이스를 다축(구조·리팩토링·성능·보안·테스트 등)으로 훑는 read-only 리뷰 → 개선은 self-feedback-loop로 위임 | "코드베이스 전체 리뷰해줘", "리팩토링 관점에서 봐줘", "코드 개선점 찾아줘" |
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 시작", "리뷰하고 고쳐", "review and fix" |
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
@@ -44,9 +45,14 @@
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | "cmux 사용법", "cmux 설정", "cmux 브라우저", "cmux sidebar" |
 | `setup-herdr` | herdr `config.toml`을 다른 머신으로 이식·검증 (OS별 경로, byte-exact 전송, `config check` 3단 진단, remote attach 키 소유권) | "herdr 설정 이식", "윈도우에 herdr 설정 적용", "herdr prefix 바꿔줘", "herdr 단축키 안 먹어" |
+| `setup-remote-display` | macOS 화면 공유를 서드파티 VNC 뷰어로 쓸 때 BetterDisplay 가상 화면 + 미러링으로 framebuffer를 하나로 줄이는 CLI·Raycast 명령 설치, VNC 5900을 Tailscale 대역으로만 제한하는 pf anchor | "TigerVNC로 맥 접속", "VNC 듀얼 모니터 문제", "원격 디스플레이 켜줘", "VNC tailscale만 허용" |
+| `repo-mirror` | 여러 repo 작업 트리를 외장 볼륨·다른 Mac·Linux/WSL로 병렬 rsync 복사 (`.git` 보존, 산출물 제외, Linux 대상 NFD→NFC, openrsync vs rsync 3.x 선택) | "repo 백업", "WSL로 레포 복사", "한글 파일명 깨져", "mirror repositories to linux" |
+| `tailnet-server-hardening` | 클라우드 VM 관리 경로를 Tailscale로 옮기고 공개 SSH를 닫는 순서·검증(키 만료, sshd 실효값, 2중 방화벽, CDN 대역 제한, 비상 경로) + 바깥·서버 안·OCI control plane 3지점 read-only 점검 스크립트 | "서버 SSH 포트 닫기", "tailscale로만 서버 접속", "서버 헬스체크", "node key expired" |
+| `mac-disk-reclaim` | macOS 개발 머신 디스크 회수 — read-only 실측 스크립트, 재생성 비용 기준 A/B/C 등급, 되살릴 수 없는 데이터는 사본 체크섬 검증 후 삭제, VM 디스크 fstrim | "디스크 용량 확보", "맥 용량 줄이기", "Docker 용량 줄이기", "free up disk space on mac" |
+| `karabiner-rules` | Karabiner complex modification 작성·디버깅 — remap 이후 modifier로 매칭되는 모델, 출력이 시스템 단축키에 먹히는 문제, `select_input_source` race와 hold 완화, 프로필별 규칙, lint가 exit 0으로 에러를 숨기는 함정 | "karabiner 안 먹어", "cmd를 ctrl로 바꿨더니 조합이 안 돼", "한글 상태에서 단축키 깨져" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 | `setup-global-config` | tool-agnostic 공통 원칙을 Claude Code와 Codex에 byte-identical하게 설치·검증·제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
-| `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log·네트워크 브릿지 + release 크래시를 debug+Metro로 진단 | "console.log 안 보여", "Metro 로그 안 나와", "release 크래시가 안 잡혀", "화면 진입하면 죽어" |
+| `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log·네트워크 브릿지 + release 크래시를 debug+Metro로 진단 + 실기기 debug 빌드 툴체인 함정 | "console.log 안 보여", "Metro 로그 안 나와", "release 크래시가 안 잡혀", "화면 진입하면 죽어" |
 | `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
 
 ### 저작 도구
@@ -157,6 +163,7 @@ custom-skills/
 │   │       ├── output-format.md
 │   │       └── personas.md
 │   ├── diff-review/SKILL.md
+│   ├── diff-trim/SKILL.md
 │   ├── codebase-review/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -194,7 +201,8 @@ custom-skills/
 │   │   ├── scripts/cdp-console.mjs
 │   │   └── references/
 │   │       ├── inspector-proxy.md
-│   │       └── cdp-domains.md
+│   │       ├── cdp-domains.md
+│   │       └── device-build-toolchain.md
 │   ├── git-diagnosis/
 │   │   └── SKILL.md
 │   ├── plan/

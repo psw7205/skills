@@ -1,0 +1,5 @@
+tailnet = "{ 100.64.0.0/10, fd7a:115c:a1e0::/48 }"
+
+pass in quick on lo0 proto { tcp udp } to any port 5900
+pass in quick proto { tcp udp } from $tailnet to any port 5900
+block in quick proto { tcp udp } to any port 5900
