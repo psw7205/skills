@@ -157,6 +157,6 @@ rg -n 'applies-to:' docs/solutions/ | rg <stack>
 ## 범위 외
 
 - 세션 전체 의사결정 기록 — `session-history`.
-- plan 작성 — `plan`.
+- 러프 문서 작성 — `rough`.
 - 메모리 정리·승격 — `clean-memory`.
 - 변경 의도 추적(이미 commit된 변경에 대해 *왜* 바꿨는지) — `trace-change-why`.

@@ -24,7 +24,7 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/plan",
+        "./skills/rough",
         "./skills/diff-review",
         "./skills/diff-trim",
         "./skills/codebase-review",
