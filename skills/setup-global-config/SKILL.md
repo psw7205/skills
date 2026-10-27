@@ -33,6 +33,15 @@ ${CLAUDE_PLUGIN_ROOT}/skills/setup-global-config/references/global-config.md
 
 Canonical은 두 agent가 공통으로 해석할 tool-agnostic 원칙만 소유한다. Agent별 tool 호출, model alias, hook 동작, browser CLI command catalog는 넣지 않는다.
 
+## 호스트별 내용
+
+머신마다 다른 사실(OS·PATH 함정, 디렉토리 위치, 네트워크, 모델 provider)은 canonical에 넣지 않고 각 agent가 글로벌 파일과 별도로 읽는 곳에 둔다. 이 skill은 두 위치를 만들거나 덮어쓰지 않는다.
+
+| 에이전트 | 위치 |
+|----------|------|
+| Claude Code | `~/.claude/rules/host.md` (user-level rules, 모든 프로젝트에 로드) |
+| Codex | `~/.codex/config.toml`의 top-level `developer_instructions` (전역 `AGENTS.md`는 파일 하나만 읽힌다) |
+
 ## 설치 절차
 
 각 대상에 다음 절차를 적용한다.
