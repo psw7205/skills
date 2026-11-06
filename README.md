@@ -77,6 +77,7 @@
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
 | `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
+| `ncloud-docs` | NCP 공식 문서를 llms.txt 인덱스·원문 `.md`로 수집 (slug 검색, 상품 단위 pull 후 grep으로 부재 판정, WAF UA 차단·SPA 셸·WebFetch 요약 함정 회피) | "ncloud 문서 확인해", "NCP API 스펙", "네이버 클라우드 가이드" |
 
 ## 설치
 
