@@ -20,7 +20,7 @@
     },
     {
       "name": "workflow-session",
-      "description": "Planning, review loops, session history, handoff, and knowledge capture skills.",
+      "description": "Planning, review loops, pstack Codex mapping with adapter propagation to subagents, session history, handoff, and knowledge capture skills.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -29,6 +29,7 @@
         "./skills/diff-trim",
         "./skills/codebase-review",
         "./skills/self-feedback-loop",
+        "./skills/pstack-codex",
         "./skills/compound",
         "./skills/session-history",
         "./skills/session-log",

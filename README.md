@@ -28,6 +28,7 @@
 | `diff-trim` | 작업을 마친 diff의 추가 hunk에서 군살(코드 되풀이 주석·1회용 helper·불가능 상태 방어·구현 복제 테스트·요청 밖 구조)을 동작 무변경으로 걷어내는 1회 패스. 검사/정리 모드 | "diff 다이어트", "불필요한 주석 지워", "커밋 전에 정리", "trim the diff" |
 | `codebase-review` | 전체 코드베이스를 다축(구조·리팩토링·성능·보안·테스트 등)으로 훑는 read-only 리뷰 → 개선은 self-feedback-loop로 위임 | "코드베이스 전체 리뷰해줘", "리팩토링 관점에서 봐줘", "코드 개선점 찾아줘" |
 | `self-feedback-loop` | 구현 결과를 plan 기준으로 review-fix-verify-commit 루프 반복 | "피드백 루프 시작", "리뷰하고 고쳐", "review and fix" |
+| `pstack-codex` | pstack 원본 스킬의 Cursor 도구·모델·경로를 Codex로 매핑하고 모든 서브에이전트에 어댑터를 전달하는 실행 진입점 | "Codex에서 pstack", "poteto-mode로 작업", "use pstack in Codex" |
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
 | `session-log` | Stop 이벤트마다 마지막 user/assistant 교환을 세션당 1개 md에 자동 append하는 훅 설치/제거 | "세션 로그 훅 설치", "세션 자동 기록", "세션 로그 제거" |
@@ -164,6 +165,7 @@ custom-skills/
 │   │   └── references/
 │   │       ├── output-format.md
 │   │       └── personas.md
+│   ├── pstack-codex/SKILL.md
 │   ├── diff-review/SKILL.md
 │   ├── diff-trim/SKILL.md
 │   ├── codebase-review/
