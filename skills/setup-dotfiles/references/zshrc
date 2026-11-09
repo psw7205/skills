@@ -14,10 +14,12 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=#a3a3a3,bg=bold,underline"
 ZSH_TMUX_CONFIG="$HOME/.config/tmux/tmux.conf"
 
 # fzf-tab, zsh-autosuggestions, fast-syntax-highlighting 은 번들이 아니라
-# $ZSH_CUSTOM/plugins 에 각각 clone 해야 한다.
+# $ZSH_CUSTOM/plugins 에 각각 clone 해야 한다. resume-completion 은 custom-skills 의
+# resume-completion 스킬이 같은 위치에 설치한다.
 plugins=(
   git
   fzf-tab
+  resume-completion
   zsh-autosuggestions
   fast-syntax-highlighting
   brew

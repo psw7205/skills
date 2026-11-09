@@ -1,0 +1,71 @@
+#compdef claude
+
+# Option specs come from `claude --help` so the list follows the installed version.
+_resume_completion_claude_options() {
+  setopt localoptions extended_glob
+  if (( $+_resume_completion_claude_opts )); then
+    reply=( "${_resume_completion_claude_opts[@]}" )
+    return 0
+  fi
+  local line spec desc arg argspec name names
+  local -a specs tokens
+  for line in "${(@f)$(command claude --help 2>/dev/null)}"; do
+    [[ $line == '  -'* ]] || continue
+    spec=${line[3,-1]}
+    desc=''
+    if [[ $spec == (#b)(*[^ ])'  '##(*) ]]; then
+      spec=$match[1] desc=$match[2]
+    fi
+    desc=${desc//[\[\]:\'\"\\]/ }
+    arg=''
+    if [[ $spec == (#b)(*)' '([\<\[]*) ]]; then
+      spec=$match[1] arg=$match[2]
+    fi
+    tokens=( ${(s:, :)spec} )
+    (( $#tokens )) || continue
+    names=${(j: :)tokens}
+    argspec=''
+    if [[ -n $arg ]]; then
+      if [[ $names == *--resume* ]]; then
+        argspec='::session:->sessions'
+      else
+        [[ $arg == '['* ]] && argspec='::' || argspec=':'
+        argspec+=${${arg[2,-2]}//[:\[\]]/ }:
+        if [[ $arg == *(dir|path|file|config)* ]]; then
+          argspec+='_files'
+        else
+          argspec+=' '
+        fi
+      fi
+    fi
+    for name in $tokens; do
+      [[ $arg == *...* ]] && specs+="(${names})*${name}[${desc}]${argspec}" \
+                          || specs+="(${names})${name}[${desc}]${argspec}"
+    done
+  done
+  typeset -ga _resume_completion_claude_opts=( $specs )
+  reply=( $specs )
+  (( $#specs ))
+}
+
+_claude() {
+  local curcontext=$curcontext state state_descr line ret=1
+  typeset -A opt_args
+  if [[ $words[CURRENT-1] == (-r|--resume) ]]; then
+    _resume_completion_sessions claude Claude
+    return
+  fi
+  local -a specs reply
+  if _resume_completion_claude_options; then
+    specs=( $reply )
+    _arguments -C -S $specs '*:prompt:_default' && ret=0
+    case $state in
+      sessions) _resume_completion_sessions claude Claude && ret=0 ;;
+    esac
+  else
+    _default && ret=0
+  fi
+  return ret
+}
+
+_claude "$@"

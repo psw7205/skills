@@ -30,7 +30,7 @@ description: >
 1. **Brewfile** — 셸 설정이 `zoxide`, `fzf`, `fd`, `fx`, `bat`를 전제하므로 패키지가 먼저다. 이 순서가 뒤집히면 새 셸이 매번 `command not found`를 낸다.
 2. **mise 설정** — 언어 런타임. Brewfile은 `mise` 자체만 깔고 런타임은 mise가 관리한다.
 3. **zshenv → zprofile → zshrc** — 모든 셸 공통값, 로그인 셸의 PATH와 shellenv, 대화형 설정 순서다. 무엇을 어디에 두는지는 아래 "파일 역할"이 정한다.
-4. **oh-my-zsh 커스텀 플러그인** — `fzf-tab`, `zsh-autosuggestions`, `fast-syntax-highlighting`은 oh-my-zsh 번들이 아니다. `$ZSH_CUSTOM/plugins/`에 각각 clone해야 하고, 없으면 셸 시작 시 경고가 난다.
+4. **oh-my-zsh 커스텀 플러그인** — `fzf-tab`, `zsh-autosuggestions`, `fast-syntax-highlighting`은 oh-my-zsh 번들이 아니다. `$ZSH_CUSTOM/plugins/`에 각각 clone해야 하고, 없으면 셸 시작 시 경고가 난다. `resume-completion`은 clone 대상이 아니라 `resume-completion` 스킬의 설치 절차가 같은 위치에 복사한다.
 
 ## 파일 역할
 

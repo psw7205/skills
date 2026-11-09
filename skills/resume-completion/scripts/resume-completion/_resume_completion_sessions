@@ -1,0 +1,56 @@
+#autoload
+# Usage: _resume_completion_sessions claude|codex Label
+# Offers session ids; the display string carries title, age and short id.
+
+local tool=$1 label=$2
+local dir=${RESUME_COMPLETION_DIR:-${functions_source[_resume_completion_sessions]:h}}
+local script=$dir/resume-sessions
+[[ -x $script ]] || { _message "resume-sessions not found: $script"; return 1 }
+
+zmodload -F zsh/datetime b:strftime p:EPOCHSECONDS 2>/dev/null
+local curcontext="${curcontext%:*}:${tool}-session"
+local -i limit now=$EPOCHSECONDS d
+zstyle -s ":resume-completion:$tool" others-limit limit || limit=200
+
+local -a lines parts cur_ids cur_disp oth_ids oth_disp
+lines=( "${(@f)$("$script" $tool 2>/dev/null)}" )
+local line epoch id cwd title when home_tilde
+for line in $lines; do
+  [[ -n $line ]] || continue
+  parts=( "${(@s:	:)line}" )
+  (( $#parts >= 4 )) || continue
+  epoch=$parts[1] id=$parts[2] cwd=$parts[3] title=${(j: :)parts[4,-1]}
+  d=$(( now - epoch ))
+  if (( d < 60 )); then when=now
+  elif (( d < 3600 )); then when=$(( d / 60 ))m
+  elif (( d < 86400 )); then when=$(( d / 3600 ))h
+  elif (( d < 7 * 86400 )); then when=$(( d / 86400 ))d
+  else strftime -s when '%m-%d' $epoch 2>/dev/null || when=$(( d / 86400 ))d
+  fi
+  if [[ $cwd == $PWD ]]; then
+    cur_ids+=$id
+    cur_disp+="${title[1,60]} · $when · ${id[1,8]}"
+  elif (( $#oth_ids < limit )); then
+    oth_ids+=$id
+    oth_disp+="${title[1,60]} · $when · ${${cwd:-?}/#$HOME/~} · ${id[1,8]}"
+  fi
+done
+
+[[ -n $RESUME_COMPLETION_DEBUG ]] && print -r -- "ctx=$curcontext prefix=$PREFIX cur=$#cur_ids oth=$#oth_ids words=${(j: :)words} CURRENT=$CURRENT" >> $RESUME_COMPLETION_DEBUG
+local ret=1
+if (( $#cur_ids )); then
+  _wanted -V ${tool}-sessions-here expl "$label sessions · ${PWD/#$HOME/~}" \
+    compadd -U -d cur_disp -a cur_ids && ret=0
+fi
+if (( $#oth_ids )); then
+  _wanted -V ${tool}-sessions-elsewhere expl "$label sessions · other projects" \
+    compadd -U -d oth_disp -a oth_ids && ret=0
+fi
+if (( ret == 0 )); then
+  # Codex ids are UUIDv7 and share a leading "01"; without this, the first Tab
+  # inserts that common prefix instead of opening the picker.
+  compstate[insert]=automenu
+else
+  _message "no $label sessions found"
+fi
+return ret

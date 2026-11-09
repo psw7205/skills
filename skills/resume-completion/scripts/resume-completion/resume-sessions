@@ -1,0 +1,122 @@
+#!/usr/bin/env zsh
+# Usage: resume-sessions claude|codex
+# Prints one session per line, newest first: <epoch>\t<id>\t<cwd>\t<title>
+
+emulate -L zsh
+setopt extended_glob pipe_fail
+zmodload -F zsh/stat b:zstat
+
+cache_dir=${RESUME_COMPLETION_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/resume-completion}
+
+json_unescape() {
+  local t=$1
+  t=${t//\\\"/\"}
+  t=${t//\\n/ }
+  t=${t//\\t/ }
+  t=${t//\\\\/\\}
+  t=${t//[$'\t\n\r']/ }
+  print -r -- $t
+}
+
+claude_title() {
+  local f=$1 hit agent ai t
+  for hit in "${(@f)$(command grep -aoE '"type":"(ai-title|agent-name)","(aiTitle|agentName)":"(\\.|[^"\\])*"' -- $f 2>/dev/null)}"; do
+    case $hit in
+      '"type":"agent-name"'*) agent=${hit#*\"agentName\":\"} ;;
+      '"type":"ai-title"'*) ai=${hit#*\"aiTitle\":\"} ;;
+    esac
+  done
+  t=${agent:-$ai}
+  t=${t%\"}
+  if [[ -z $t ]] && (( $+commands[jq] )); then
+    t=$(command jq -rn 'first(inputs
+      | select(.type == "user" and .isMeta != true)
+      | .message.content
+      | (if type == "string" then . else ([.[]? | select(.type == "text") | .text] | first // "") end)
+      | select(length > 0 and (startswith("<") | not))
+      | .[0:300])' -- $f 2>/dev/null)
+  fi
+  json_unescape "${t:-(untitled)}"
+}
+
+claude_cwd() {
+  local hit
+  hit=$(command grep -am1 -oE '"cwd":"(\\.|[^"\\])*"' -- $1 2>/dev/null)
+  hit=${hit#\"cwd\":\"}
+  json_unescape "${hit%\"}"
+}
+
+claude_sessions() {
+  local home=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
+  local projects=$home/projects
+  [[ -d $projects ]] || return 0
+  local cache=$cache_dir/claude-sessions.tsv
+  local -A old
+  local line
+  if [[ -r $cache ]]; then
+    for line in "${(@f)$(<$cache)}"; do
+      [[ -n $line ]] || continue
+      old[${line%%$'\t'*}]=${line#*$'\t'}
+    done
+  fi
+  local hex='[0-9a-f]'
+  local -a files=( $projects/*/${~hex}(#c8)-${~hex}(#c4)-${~hex}(#c4)-${~hex}(#c4)-${~hex}(#c12).jsonl(N.) )
+  local f rec mtime cwd title
+  local -a cache_lines emit
+  local -A st
+  local -i changed=0
+  for f in $files; do
+    zstat -H st +mtime -- $f 2>/dev/null || continue
+    mtime=$st[mtime]
+    rec=$old[$f]
+    if [[ -n $rec && ${rec%%$'\t'*} == $mtime ]]; then
+      cache_lines+="$f"$'\t'"$rec"
+      rec=${rec#*$'\t'}
+      cwd=${rec%%$'\t'*}
+      title=${rec#*$'\t'}
+    else
+      changed=1
+      cwd=$(claude_cwd $f)
+      title=$(claude_title $f)
+      cache_lines+="$f"$'\t'"$mtime"$'\t'"$cwd"$'\t'"$title"
+    fi
+    emit+="$mtime"$'\t'"${${f:t}%.jsonl}"$'\t'"$cwd"$'\t'"$title"
+  done
+  if (( changed || $#cache_lines != $#old )); then
+    command mkdir -p $cache_dir 2>/dev/null
+    print -rl -- $cache_lines > $cache.$$ 2>/dev/null && command mv -f $cache.$$ $cache 2>/dev/null
+  fi
+  print -rl -- ${(On)emit}
+}
+
+codex_state_db() {
+  local home=${CODEX_HOME:-$HOME/.codex}
+  local -a dbs=( $home/state_<->.sqlite(N) )
+  local f n best=-1 db
+  for f in $dbs; do
+    n=${${f:t}//[^0-9]/}
+    (( n > best )) && { best=$n; db=$f }
+  done
+  [[ -n $db ]] && print -r -- $db
+}
+
+codex_sessions() {
+  (( $+commands[sqlite3] )) || return 0
+  local db
+  db=$(codex_state_db) || return 0
+  [[ -n $db ]] || return 0
+  command sqlite3 -readonly -separator $'\t' "$db" "
+    select coalesce(nullif(updated_at, 0), created_at), id, cwd,
+      replace(replace(replace(
+        coalesce(nullif(name, ''), nullif(title, ''), nullif(first_user_message, ''), '(untitled)'),
+        char(10), ' '), char(13), ' '), char(9), ' ')
+    from threads
+    where archived = 0 and source <> 'exec' and source not like '{%'
+    order by 1 desc" 2>/dev/null
+}
+
+case $1 in
+  claude) claude_sessions ;;
+  codex) codex_sessions ;;
+  *) print -u2 -- "usage: ${0:t} claude|codex"; exit 2 ;;
+esac

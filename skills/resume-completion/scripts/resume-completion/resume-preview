@@ -1,0 +1,66 @@
+#!/usr/bin/env zsh
+# Usage: resume-preview claude|codex <session-id>
+# fzf preview: session metadata followed by the most recent exchanges.
+
+emulate -L zsh
+setopt extended_glob
+zmodload zsh/datetime
+
+tool=$1 id=$2
+here=${0:A:h}
+hex='[0-9a-f]'
+if [[ $id != ${~hex}(#c8)-${~hex}(#c4)-${~hex}(#c4)-${~hex}(#c4)-${~hex}(#c12) ]]; then
+  print -r -- "(no session)"
+  exit 0
+fi
+
+bold=$'\e[1m' dim=$'\e[2m' cyan=$'\e[36m' reset=$'\e[0m'
+
+line=$("$here/resume-sessions" $tool 2>/dev/null | command grep -m1 -F -- $'\t'"$id"$'\t')
+if [[ -n $line ]]; then
+  parts=( "${(@s:	:)line}" )
+  strftime -s when '%Y-%m-%d %H:%M' $parts[1] 2>/dev/null
+  print -r -- "${bold}${(j: :)parts[4,-1]}${reset}"
+  print -r -- "${dim}${parts[3]/#$HOME/~}${reset}"
+  print -r -- "${dim}${when}  ${id}${reset}"
+else
+  print -r -- "${dim}${id}${reset}"
+fi
+print
+
+(( $+commands[jq] )) || { print -r -- "(jq not installed; no transcript preview)"; exit 0 }
+
+case $tool in
+  claude)
+    files=( ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects/*/$id.jsonl(N) )
+    [[ -n $files[1] ]] || { print -r -- "(transcript not found)"; exit 0 }
+    command jq -r --arg u "$cyan" --arg r "$reset" '
+      select((.type == "user" or .type == "assistant") and .isMeta != true)
+      | (if .type == "user" then $u + "› " else "  " end) as $p
+      | .message.content
+      | (if type == "string" then [.] else [.[]? | select(.type == "text") | .text] end)
+      | map(select(length > 0 and (startswith("<") | not)))
+      | .[]
+      | $p + (gsub("\n"; " ") | .[0:240]) + $r' -- $files[1] 2>/dev/null | tail -n 30
+    ;;
+  codex)
+    home=${CODEX_HOME:-$HOME/.codex}
+    dbs=( $home/thread_history_<->.sqlite(N) )
+    best=-1
+    for f in $dbs; do
+      n=${${f:t}//[^0-9]/}
+      (( n > best )) && { best=$n; db=$f }
+    done
+    [[ -n $db ]] && (( $+commands[sqlite3] )) || { print -r -- "(thread history not found)"; exit 0 }
+    command sqlite3 -readonly "$db" "
+      select item_json from thread_items
+      where thread_id = '$id' and item_type in ('userMessage', 'agentMessage')
+      order by rollout_ordinal desc limit 20" 2>/dev/null \
+    | command jq -rs --arg u "$cyan" --arg r "$reset" '
+      reverse[]
+      | if .type == "userMessage" then $u + "› " + ([.content[]? | select(.type == "text") | .text] | join(" ")) + $r
+        elif .type == "agentMessage" then "  " + (.text // "")
+        else empty end
+      | gsub("\n"; " ") | .[0:240]' 2>/dev/null
+    ;;
+esac

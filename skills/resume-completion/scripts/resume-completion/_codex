@@ -1,0 +1,50 @@
+#compdef codex
+
+# Codex ships its own completion (`codex completion zsh`). Load it under another
+# name and swap the session_id positional for the session picker; everything else
+# stays upstream.
+_resume_completion_codex_sessions() {
+  _resume_completion_sessions codex Codex
+}
+
+_resume_completion_codex_load_upstream() {
+  (( $+functions[_resume_completion_codex_upstream] )) && return 0
+  (( $+commands[codex] )) || return 1
+  local src
+  # The generated spec lists an optional `prompt` positional before the subcommand
+  # positional, so `codex resume <Tab>` treats `resume` as the prompt and offers
+  # subcommands. Drop that prompt and shift the dispatch index that assumed it.
+  src=$(command codex completion zsh 2>/dev/null | command sed \
+    -e 's/^_codex() {$/_resume_completion_codex_upstream() {/' \
+    -e "s/'::session_id -- [^']*:_default'/'::session_id:_resume_completion_codex_sessions'/" \
+    -e '/^if \[ "\$funcstack\[1\]" = "_codex" \]; then$/,$d' \
+  | command awk '
+    held != "" {
+      if ($0 ~ /^":: :_codex[A-Za-z_]*_commands" \\$/) fix = 1; else print held
+      held = ""
+    }
+    /^\047::prompt -- .*\047 \\$/ { held = $0; next }
+    fix && /\$line\[2\]/ {
+      gsub(/\$line\[2\]/, "$line[1]")
+      if ($0 ~ /^ *case \$line\[1\] in$/) fix = 0
+    }
+    { print }
+    END { if (held != "") print held }')
+  [[ $src == *'_resume_completion_codex_upstream() {'* \
+     && $src == *':_resume_completion_codex_sessions'* \
+     && $src == *'words=($line[1] "${words[@]}")'* ]] || return 1
+  eval "$src" 2>/dev/null || return 1
+  (( $+functions[_resume_completion_codex_upstream] ))
+}
+
+_codex() {
+  if _resume_completion_codex_load_upstream; then
+    _resume_completion_codex_upstream "$@"
+  elif [[ $words[CURRENT-1] == (resume|fork) ]]; then
+    _resume_completion_codex_sessions
+  else
+    _default
+  fi
+}
+
+_codex "$@"

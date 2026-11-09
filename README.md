@@ -53,6 +53,7 @@
 | `mac-disk-reclaim` | macOS 개발 머신 디스크 회수 — read-only 실측 스크립트, 재생성 비용 기준 A/B/C 등급, 되살릴 수 없는 데이터는 사본 체크섬 검증 후 삭제, VM 디스크 fstrim | "디스크 용량 확보", "맥 용량 줄이기", "Docker 용량 줄이기", "free up disk space on mac" |
 | `karabiner-rules` | Karabiner complex modification 작성·디버깅 — remap 이후 modifier로 매칭되는 모델, 출력이 시스템 단축키에 먹히는 문제, `select_input_source` race와 hold 완화, 프로필별 규칙, lint가 exit 0으로 에러를 숨기는 함정 | "karabiner 안 먹어", "cmd를 ctrl로 바꿨더니 조합이 안 돼", "한글 상태에서 단축키 깨져" |
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
+| `resume-completion` | `claude --resume`·`codex resume` 뒤 Tab에서 세션을 타이틀·시각·짧은 id로 고르는 zsh completion (fzf-tab이면 fzf 창+미리보기, 현재 디렉토리/다른 프로젝트 그룹, Codex 내장 completion 보존) | "resume 자동완성 설치", "세션 picker 설치", "claude resume tab" |
 | `setup-global-config` | tool-agnostic 공통 원칙을 Claude Code와 Codex에 byte-identical하게 설치·검증·제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log·네트워크 브릿지 + release 크래시를 debug+Metro로 진단 + 실기기 debug 빌드 툴체인 함정 | "console.log 안 보여", "Metro 로그 안 나와", "release 크래시가 안 잡혀", "화면 진입하면 죽어" |
 | `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
