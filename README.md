@@ -134,106 +134,15 @@ git status --short
 ```
 custom-skills/
 ├── skills/
-│   ├── skill-guide/
-│   │   ├── SKILL.md
-│   │   └── references/guide.md
-│   ├── commit-msg/SKILL.md
-│   ├── commit-regroup/
-│   │   ├── SKILL.md
-│   │   └── scripts/regroup.sh
-│   ├── session-history/SKILL.md
-│   ├── session-log/
-│   │   ├── SKILL.md
-│   │   └── scripts/stop-session-log.sh
-│   ├── verify-gate/
-│   │   ├── SKILL.md
-│   │   └── scripts/
-│   │       ├── stop-verify-gate.sh
-│   │       └── test-stop-verify-gate.sh
-│   ├── trace-change-why/
-│   │   ├── SKILL.md
-│   │   └── scripts/find-session.sh
-│   ├── session-bridge/
-│   │   ├── SKILL.md
-│   │   └── scripts/find-transcript.sh
-│   ├── prompt/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── structure.md
-│   │       ├── techniques.md
-│   │       └── checklist.md
-│   ├── humanizer/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── patterns.md
-│   │       └── korean-patterns.md
-│   ├── self-feedback-loop/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── output-format.md
-│   │       └── personas.md
-│   ├── pstack-codex/SKILL.md
-│   ├── diff-review/SKILL.md
-│   ├── diff-trim/SKILL.md
-│   ├── codebase-review/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── survey-checklist.md
-│   │       ├── security-rulesets.md
-│   │       └── false-positives.md
-│   ├── clean-memory/SKILL.md
-│   ├── tmux/SKILL.md
-│   ├── cmux-help/SKILL.md
-│   ├── video-subtitle-dl/
-│   │   ├── SKILL.md
-│   │   ├── references/
-│   │   │   ├── yt-dlp-options.md
-│   │   │   └── translation-guide.md
-│   │   └── scripts/fetch-subs.sh
-│   ├── setup-hooks/
-│   │   ├── SKILL.md
-│   │   └── scripts/
-│   │       ├── shell_lex.py
-│   │       ├── guard_rules.py
-│   │       ├── guard-commands.py
-│   │       ├── guard-commands-codex.py
-│   │       ├── auto-backup.sh
-│   │       ├── rg-replace-flag-fix.py
-│   │       ├── install-codex-hook.sh
-│   │       └── test-auto-backup.sh
-│   ├── statusline/
-│   │   ├── SKILL.md
-│   │   └── statusline-command.sh
-│   ├── setup-global-config/
-│   │   ├── SKILL.md
-│   │   └── references/global-config.md
-│   ├── rn-cdp-bridge/
-│   │   ├── SKILL.md
-│   │   ├── scripts/cdp-console.mjs
-│   │   └── references/
-│   │       ├── inspector-proxy.md
-│   │       ├── cdp-domains.md
-│   │       └── device-build-toolchain.md
-│   ├── git-diagnosis/
-│   │   └── SKILL.md
-│   ├── plan/
-│   │   └── SKILL.md
-│   ├── repo-prd-sync/
-│   │   └── SKILL.md
-│   ├── api-crud-pattern/
-│   │   └── SKILL.md
-│   ├── test-code-guide/
-│   │   ├── SKILL.md
-│   │   └── references/
-│   │       ├── test-design-techniques.md
-│   │       └── automation-quality.md
-│   ├── worktree-lifecycle/
-│   │   └── SKILL.md
-│   ├── compound/
-│   │   └── SKILL.md
-│   └── agent-native-audit/
-│       └── SKILL.md
+│   └── <skill-name>/
+│       ├── SKILL.md       # 엔트리 포인트 (frontmatter: name, description)
+│       ├── references/    # 필요할 때만: 보조 문서
+│       └── scripts/       # 필요할 때만: 런타임에 호출하는 스크립트
+├── .claude-plugin/
+│   └── marketplace.json   # npx skills add 분류 매니페스트
 ├── docs/                  # 스킬 빌딩 참고 자료, 플랜 아카이브
 ├── AGENTS.md              # 레포 가이드라인
 └── README.md
 ```
+
+스킬별 파일은 `find skills -type f | sort`로 확인한다.

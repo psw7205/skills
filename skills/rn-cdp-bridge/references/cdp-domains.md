@@ -14,7 +14,7 @@ Console 출력을 캡처하는 핵심 도메인.
 |--------|------|
 | `Runtime.enable` | execution context 리포팅 활성화. **console 이벤트 수신의 전제조건** |
 | `Runtime.disable` | 리포팅 비활성화 |
-| `Runtime.evaluate` | JS 표현식 실행. REPL 용도. **`awaitPromise: true` 필수** (아래 참조) |
+| `Runtime.evaluate` | JS 표현식 실행. 비동기 결과의 완료 대기는 런타임별 확인 필요 (아래 참조) |
 
 ### 이벤트
 
@@ -62,16 +62,20 @@ Console 출력을 캡처하는 핵심 도메인.
 
 ```json
 { "id": 2, "method": "Runtime.evaluate", "params": {
-    "expression": "fetch('https://api.example.com/health').then(r => r.json())",
-    "awaitPromise": true
+    "expression": "globalThis.__cdpProbe = {done:false}; Promise.resolve(17).then(value => {globalThis.__cdpProbe = {done:true,value};}, error => {globalThis.__cdpProbe = {done:true,error:String(error)};}); 'started'",
+    "returnByValue": true
 }}
 ```
 
-**Hermes 제한사항**:
-- `async/await` 구문 사용 불가 → Promise 체인(`.then()`)으로 작성
-- `awaitPromise: true`를 넣어야 Promise 결과가 resolve된 후 반환됨 (없으면 pending 상태로 끝남)
+후속 `Runtime.evaluate`에서 `globalThis.__cdpProbe`를 읽어 `done`이 `true`인지 확인한다. 실제 측정에는 실행별 고유 키와 제한 시간을 두고, 종료 후 해당 키를 정리한다.
+
+**런타임별 확인사항**:
+- `async/await` 문법 지원과 Promise 완료 대기를 구분한다. RN 0.83.0 Hermes에서는 async 함수 표현식이 실행됐다. 최상위 `await` 지원까지 뜻하지는 않는다.
+- 같은 런타임은 `awaitPromise: true`에도 완료값 대신 Promise 내부 객체를 반환했다. 해당 옵션만으로 완료를 판정하거나 `_h`, `_i`, `_j` 같은 내부 필드를 해석하지 않는다. 위 콜백 저장·polling 방식으로 결과를 확인한다.
 - `require`, `global` 없음 → `globalThis` 사용
 - `globalThis.__r` = Metro의 require 함수 (불안정, 모듈 접근용)
+
+실측 근거와 미검증 범위는 [런타임 피드백](runtime-feedback.md)을 참고한다.
 
 ## Network 도메인 (experimental)
 

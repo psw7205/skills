@@ -92,7 +92,7 @@ echo '{"id":1,"method":"Runtime.enable"}' | websocat "$WS_URL"
 
 ## Gotchas
 
-- **Hermes CDP에서 async/await 불가**: `Runtime.evaluate`로 JS 실행 시 `async/await` 구문을 쓸 수 없다. Promise 체인(`.then()`)으로 작성하고, `awaitPromise: true` 옵션으로 결과를 받을 것.
+- **비동기 평가 완료를 별도로 확인**: `async/await` 문법 지원과 `awaitPromise` 동작은 대상 런타임에서 확인한다. RN 0.83.0 Hermes에서는 async 함수 표현식이 실행되지만 `awaitPromise: true`에도 완료값 대신 Promise 내부 객체가 반환됐다. 비동기 콜백에서 고유한 `globalThis` 키에 `{done, value, error}`를 저장하고 별도 평가로 완료 여부를 제한 시간 안에 polling한다. 이전 실행값을 읽지 않도록 시작 시 초기화하며, Promise 내부 필드를 완료 판정에 사용하지 않는다.
 - **`require`, `global` 없음**: Hermes CDP 컨텍스트에서는 `globalThis`를 사용. Metro의 require는 `globalThis.__r`로 접근 가능하나 불안정.
 - **DevTools 동시 연결 경고**: React Native DevTools가 열려 있는 상태에서 bridge를 연결하면 "unsupported debugging client" 경고가 뜨지만 기능은 동작한다.
 - **`chrome://inspect` 미지원**: RN 0.76+부터 작동하지 않는다. `j` 키 또는 `/open-debugger` 사용.
@@ -109,3 +109,4 @@ echo '{"id":1,"method":"Runtime.enable"}' | websocat "$WS_URL"
 - `references/inspector-proxy.md` — `/json/list` 응답 파싱이나 WebSocket URL 직접 구성 시 참조
 - `references/cdp-domains.md` — `consoleAPICalled` args 파싱이나 `Runtime.evaluate` 사용 시 참조
 - `references/device-build-toolchain.md` — 실기기 debug 빌드·설치가 툴체인 문제로 막힐 때(repo 이동 후 좀비 경로, JBR·Gradle, Ruby 3.4·CocoaPods, `.xcode.env.local`, fmt·clang, stale APK)
+- `references/runtime-feedback.md` — 런타임 실측에 따른 정정 근거와 미검증 범위
