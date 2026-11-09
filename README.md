@@ -32,6 +32,7 @@
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
 | `session-log` | Stop 이벤트마다 마지막 user/assistant 교환을 세션당 1개 md에 자동 append하는 훅 설치/제거 | "세션 로그 훅 설치", "세션 자동 기록", "세션 로그 제거" |
+| `verify-gate` | Claude Code·Codex의 Stop 훅으로 근거 없는 미확인 보고를 감지해 한 번 더 검증하게 함. CLI별 출력, Markdown 보고·명령과 blocker 판정 (jq, 설치/제거) | "verify gate 설치", "Codex 검증 훅 설치", "확인 안 하고 멈추는 것 막아줘", "미확인 보고 차단" |
 | `session-bridge` | Claude Code/Codex CLI/OpenCode transcript를 session id로 찾아 handoff 요약 작성 | "claude 세션 이어서", "opencode session handoff" |
 | `session-cost-audit` | Claude Code transcript 토큰 집계 → 비용 방정식 항(요청/턴·컨텍스트·cache 재구축 원인·도구 출력·subagent 모델·effort)과 anti-pattern flag 보고 | "세션 비용 분석", "토큰 어디서 새", "캐시 미스 확인", "cost dashboard" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
@@ -144,6 +145,11 @@ custom-skills/
 │   ├── session-log/
 │   │   ├── SKILL.md
 │   │   └── scripts/stop-session-log.sh
+│   ├── verify-gate/
+│   │   ├── SKILL.md
+│   │   └── scripts/
+│   │       ├── stop-verify-gate.sh
+│   │       └── test-stop-verify-gate.sh
 │   ├── trace-change-why/
 │   │   ├── SKILL.md
 │   │   └── scripts/find-session.sh

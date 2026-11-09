@@ -20,7 +20,7 @@
     },
     {
       "name": "workflow-session",
-      "description": "Planning, review loops, pstack Codex mapping with adapter propagation to subagents, session history, handoff, and knowledge capture skills.",
+      "description": "Planning, review loops, Claude Code and Codex verification Stop hooks, pstack Codex mapping with adapter propagation to subagents, session history, handoff, and knowledge capture skills.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -33,6 +33,7 @@
         "./skills/compound",
         "./skills/session-history",
         "./skills/session-log",
+        "./skills/verify-gate",
         "./skills/session-bridge",
         "./skills/session-cost-audit",
         "./skills/repo-prd-sync",
