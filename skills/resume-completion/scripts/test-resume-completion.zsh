@@ -10,12 +10,42 @@ zmodload zsh/zpty || { print -u2 'zsh/zpty module missing'; exit 1 }
 plugin=${1:-${0:A:h}/resume-completion}
 plugin=${plugin:A}
 fzf_tab=${FZF_TAB_PLUGIN-${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/fzf-tab/fzf-tab.plugin.zsh}
-tmp=$(mktemp -d)
+tmp=$(mktemp -d) || exit 1
 trap 'zpty -d z 2>/dev/null; rm -rf $tmp' EXIT
-export RESUME_COMPLETION_CACHE_DIR=$tmp/cache
-# Run the child shell where the newest Claude session lives so both groups (here / elsewhere) appear.
-test_cwd=$("$plugin/resume-sessions" claude 2>/dev/null | awk -F'\t' '$3 != "" && system("test -d \"" $3 "\"") == 0 { print $3; exit }')
-[[ -d $test_cwd ]] || test_cwd=$HOME
+export RESUME_COMPLETION_CACHE_DIR=$tmp/cache CLAUDE_CONFIG_DIR=$tmp/claude CODEX_HOME=$tmp/codex
+export RESUME_COMPLETION_TEST_MARKER=$tmp/cwd-evaluated
+fixture_cwd="$tmp/"'fixture $(touch "$RESUME_COMPLETION_TEST_MARKER")'
+fixture_title='same title $(touch "$RESUME_COMPLETION_TEST_MARKER")'
+other_cwd=$tmp/elsewhere
+claude_first=11111111-1111-4111-8111-111111111111
+claude_second=11111111-2222-4222-8222-222222222222
+claude_other=00000000-3333-4333-8333-333333333333
+codex_first=019abcde-0000-7000-8000-000000000001
+codex_second=019abcde-0000-7000-8000-000000000002
+codex_other=019fffff-0000-7000-8000-000000000003
+mkdir -p "$fixture_cwd" "$other_cwd" "$CLAUDE_CONFIG_DIR/projects/fixture" "$CODEX_HOME"
+for session_id in $claude_first $claude_second $claude_other; do
+  session_cwd=$fixture_cwd
+  [[ $session_id == $claude_other ]] && session_cwd=$other_cwd
+  jq -nc --arg cwd "$session_cwd" --arg title "$fixture_title" \
+    '{type:"user",cwd:$cwd,message:{content:"fixture"}}, {type:"agent-name",agentName:$title}' \
+    > "$CLAUDE_CONFIG_DIR/projects/fixture/$session_id.jsonl" || exit 1
+done
+touch -t 200001010000 "$CLAUDE_CONFIG_DIR/projects/fixture/$claude_other.jsonl"
+now=$(date +%s)
+sqlite3 "$CODEX_HOME/state_5.sqlite" "
+  create table threads (updated_at integer, created_at integer, id text, cwd text,
+    name text, title text, first_user_message text, archived integer, source text);
+  insert into threads values ($now,$now,'$codex_first','${fixture_cwd//\'/\'\'}','${fixture_title//\'/\'\'}','','',0,'cli');
+  insert into threads values ($now,$now,'$codex_second','${fixture_cwd//\'/\'\'}','${fixture_title//\'/\'\'}','','',0,'cli');
+  insert into threads values ($now-3600,$now-3600,'$codex_other','${other_cwd//\'/\'\'}','other title','','',0,'cli');" || exit 1
+test_cwd=$HOME
+while IFS=$'\t' read -r epoch session_id session_cwd title; do
+  if [[ -d "$session_cwd" ]]; then
+    test_cwd=$session_cwd
+    break
+  fi
+done < <("$plugin/resume-sessions" claude 2>/dev/null)
 
 uuid='[0-9a-f](#c8)-[0-9a-f](#c4)-[0-9a-f](#c4)-[0-9a-f](#c4)-[0-9a-f](#c12)'
 typeset -i pass=0 fail=0
@@ -47,16 +77,16 @@ chmod +x $tmp/fake-fzf
 
 cat > $tmp/rc-common.zsh <<EOF2
 export COLUMNS=220 LINES=60
-cd $test_cwd
+cd -- ${(q)test_cwd}
 setopt no_beep
 unsetopt auto_menu
-fpath=($plugin \$fpath)
-autoload -Uz compinit; compinit -u -d $tmp/zcompdump
+fpath=(${(q)plugin} \$fpath)
+autoload -Uz compinit; compinit -u -d ${(q)tmp}/zcompdump
 zstyle ':completion:*' completer _complete
 zstyle ':completion:*' menu no
 LISTMAX=100000
-source $plugin/resume-completion.plugin.zsh
-CAPTURE_FILE=$tmp/capture
+source ${(q)plugin}/resume-completion.plugin.zsh
+CAPTURE_FILE=${(q)tmp}/capture
 dump-buffer() { print -r -- "BUFFER=\$BUFFER" >> \$CAPTURE_FILE; zle kill-whole-line }
 zle -N dump-buffer
 bindkey '^X^D' dump-buffer
@@ -64,7 +94,7 @@ PS1='%% '
 EOF2
 
 cat > $tmp/rc-plain.zsh <<EOF2
-source $tmp/rc-common.zsh
+source ${(q)tmp}/rc-common.zsh
 _cap_main() { _main_complete "\$@"; compstate[list]=''; compstate[insert]='' }
 zle -C cap-complete complete-word _cap_main
 bindkey '^I' cap-complete
@@ -82,16 +112,16 @@ compadd() {
 EOF2
 
 cat > $tmp/rc-fzf.zsh <<EOF2
-source $tmp/rc-common.zsh
-source $fzf_tab
-zstyle ':fzf-tab:*' fzf-command $tmp/fake-fzf
-export FAKE_FZF_LOG=$tmp/fzf.log
+source ${(q)tmp}/rc-common.zsh
+source ${(q)fzf_tab}
+zstyle ':fzf-tab:*' fzf-command ${(q)tmp}/fake-fzf
+export FAKE_FZF_LOG=${(q)tmp}/fzf.log
 EOF2
 
 start_shell() {
   zpty -d z 2>/dev/null
   zpty -b z zsh -f -i || { print -u2 'zpty spawn failed'; exit 1 }
-  zpty -w z "source $1"
+  zpty -w z "source ${(q)1}"
   wait_for 'READY_OK' 'print -r -- READY_O""K'
 }
 
@@ -162,11 +192,13 @@ buffer_line() { print -r -- ${(M)${(f)"$(<$tmp/capture)"}:#BUFFER=*} }
 
 print "== plain compsys =="
 start_shell $tmp/rc-plain.zsh || exit 1
+check 'stored cwd is not evaluated as shell code' '[[ ! -e $RESUME_COMPLETION_TEST_MARKER && $test_cwd == $fixture_cwd ]]'
 
 run_case c1 'claude --resume ' $'\t'
 check 'claude --resume <Tab> offers session ids' 'hits_match $uuid'
 check 'claude --resume <Tab> groups by Claude sessions' 'capture_has "Claude sessions · "'
 check 'claude --resume <Tab> display carries title and short id' '[[ -n ${(M)${(f)"$(<$tmp/capture)"}:#*$'"'"'\t'"'"'* · [0-9a-f](#c8)} ]]'
+check 'Claude display collisions expand both UUIDs' 'capture_has "* · $claude_first" && capture_has "* · $claude_second"'
 
 zpty -w z "alias claude='claude --dangerously-skip-permissions'"
 wait_for ALIAS_OK 'print -r -- ALIAS_O""K'
@@ -179,6 +211,7 @@ check 'claude --<Tab> lists --resume and --continue from --help' 'hits_match "--
 run_case c5 'codex resume ' $'\t'
 check 'codex resume <Tab> offers session ids' 'hits_match $uuid'
 check 'codex resume <Tab> groups by Codex sessions' 'capture_has "Codex sessions · "'
+check 'Codex display collisions expand both UUIDs' 'capture_has "* · $codex_first" && capture_has "* · $codex_second"'
 
 run_case c6 'codex ' $'\t'
 check 'codex <Tab> keeps upstream subcommands' 'hits_match resume && hits_match exec'
@@ -188,6 +221,13 @@ check 'codex resume --<Tab> keeps upstream options' 'hits_match "--last"'
 
 run_case c8 'codex fork ' $'\t'
 check 'codex fork <Tab> offers session ids' 'hits_match $uuid'
+
+zpty -w z "cd -- ${(q)other_cwd}"
+wait_for CWD_OK 'print -r -- CWD_O""K'
+run_case c9 'claude --resume ' $'\t'
+check 'Claude other-project collisions expand both UUIDs' 'capture_has "* · $claude_first" && capture_has "* · $claude_second"'
+run_case c10 'codex resume ' $'\t'
+check 'Codex other-project collisions expand both UUIDs' 'capture_has "* · $codex_first" && capture_has "* · $codex_second"'
 
 if [[ -n $fzf_tab && -r $fzf_tab ]]; then
   print "== fzf-tab with fake fzf =="
@@ -204,9 +244,35 @@ if [[ -n $fzf_tab && -r $fzf_tab ]]; then
 
   run_case f3 'codex resume ' $'\t'
   check 'fzf-tab: codex resume pick inserts the id' '[[ $(buffer_line) == BUFFER=codex\ resume\ ${~uuid}* ]]'
+
+  : > $tmp/fzf.log
+  run_case f4 'codex resume zz' $'\t'
+  check 'fzf-tab: Codex typed text becomes the fzf query' '[[ $(<$tmp/fzf.log) == *--query=zz* ]]'
+  check 'fzf-tab: Codex typed text is replaced by the picked id' '[[ $(buffer_line) == BUFFER=codex\ resume\ ${~uuid}* && $(buffer_line) != *zz* ]]'
+
+  for session_id in $claude_first $claude_second; do
+    zpty -w z "export FAKE_PICK=${(q)session_id}"
+    wait_for PICK_OK 'print -r -- PICK_O""K'
+    run_case collision 'claude --resume ' $'\t'
+    check "fzf-tab: Claude collision selects $session_id" '[[ $(buffer_line) == "BUFFER=claude --resume $session_id " ]]'
+  done
+  for session_id in $codex_first $codex_second; do
+    zpty -w z "export FAKE_PICK=${(q)session_id}"
+    wait_for PICK_OK 'print -r -- PICK_O""K'
+    run_case collision 'codex resume ' $'\t'
+    check "fzf-tab: Codex collision selects $session_id" '[[ $(buffer_line) == "BUFFER=codex resume $session_id " ]]'
+  done
 else
   print "== fzf-tab plugin not found; skipping fzf-tab tests =="
 fi
+
+check 'completion never evaluates stored titles or cwd' '[[ ! -e $RESUME_COMPLETION_TEST_MARKER ]]'
+mkdir -p "$tmp/update-source" "$tmp/update-target"
+print -r -- old > "$tmp/update-source/revision"
+cp -R "$tmp/update-source/." "$tmp/update-target/"
+print -r -- new > "$tmp/update-source/revision"
+cp -R "$tmp/update-source/." "$tmp/update-target/"
+check 'reinstall overwrites active files without nesting' '[[ $(<$tmp/update-target/revision) == new && ! -d $tmp/update-target/update-source ]]'
 
 print
 print "passed=$pass failed=$fail"

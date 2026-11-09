@@ -41,7 +41,7 @@
     },
     {
       "name": "development-environment",
-      "description": "Terminal, statusline, runtime debugging, and agent-readiness skills.",
+      "description": "Terminal, statusline, collision-safe resume completion with repeatable installation, runtime debugging, and agent-readiness skills.",
       "source": "./",
       "strict": false,
       "skills": [

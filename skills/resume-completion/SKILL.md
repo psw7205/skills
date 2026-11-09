@@ -40,8 +40,8 @@ description: >
 
 1. 전제 확인: `zsh`, `fzf`, `jq`, `sqlite3`, 그리고 fzf 창을 원하면 `fzf-tab`이 셸에 로드돼 있어야 한다. `fzf-tab`이 없으면 zsh 기본 메뉴로 동작하며 미리보기와 그룹 전환은 없다.
 2. 플러그인 디렉토리 복사. 심볼릭 링크가 아니라 복사다. 스킬 경로는 설치 도구가 바꿀 수 있고, 셸 시작 경로가 그 변동을 따라가게 두지 않는다.
-   - oh-my-zsh: `cp -R <skill>/scripts/resume-completion "${ZSH_CUSTOM:-$ZSH/custom}/plugins/resume-completion"` 후 `~/.zshrc`의 `plugins=(...)`에 `resume-completion`을 추가한다. 위치는 무관하다. oh-my-zsh가 플러그인 디렉토리를 compinit 전에 fpath에 넣고 plugin 파일은 compinit 뒤에 source한다.
-   - 그 외 zsh: 원하는 위치(예: `~/.zsh/plugins/resume-completion`)에 복사하고, `~/.zshrc`에서 `compinit`보다 앞에 `fpath=(<dir> $fpath)`, 뒤에 `source <dir>/resume-completion.plugin.zsh`를 둔다. 기존 `~/.zcompdump*`를 지워야 새 `_claude`·`_codex`가 등록된다.
+   - oh-my-zsh: 대상 `"${ZSH_CUSTOM:-$ZSH/custom}/plugins/resume-completion"`을 `mkdir -p`로 만든 뒤 `cp -R "<skill>/scripts/resume-completion/." "${ZSH_CUSTOM:-$ZSH/custom}/plugins/resume-completion/"`로 내용을 복사한다. `~/.zshrc`의 `plugins=(...)`에 `resume-completion`을 추가한다. 위치는 무관하다. oh-my-zsh가 플러그인 디렉토리를 compinit 전에 fpath에 넣고 plugin 파일은 compinit 뒤에 source한다.
+   - 그 외 zsh: 원하는 대상(예: `~/.zsh/plugins/resume-completion`)을 `mkdir -p`로 만들고 `cp -R "<skill>/scripts/resume-completion/." "<dir>/"`로 내용을 복사한다. `~/.zshrc`에서 `compinit`보다 앞에 `fpath=(<dir> $fpath)`, 뒤에 `source <dir>/resume-completion.plugin.zsh`를 둔다. 기존 `~/.zcompdump*`를 지워야 새 `_claude`·`_codex`가 등록된다.
 3. 기존 `~/.zshrc`를 덮어쓰지 않는다. 플러그인 이름 한 줄만 추가하고 diff를 보여준다.
 4. Claude 캐시를 미리 만든다: `zsh <dir>/resume-sessions claude >/dev/null`. 첫 스캔은 transcript 총량에 비례해 수 초 걸리고, 이걸 건너뛰면 첫 Tab이 그만큼 멈춘다.
 5. 새 셸에서 `claude --resume ` 뒤 Tab, `codex resume ` 뒤 Tab으로 확인한다. 기존 탭에는 반영되지 않는다.
@@ -52,7 +52,7 @@ description: >
 zsh <skill>/scripts/test-resume-completion.zsh
 ```
 
-zpty로 대화형 zsh를 띄워 실제 키 입력으로 검사한다. 일반 compsys 경로에서는 후보와 그룹 헤더, alias를 거친 호출, `claude --` 옵션 목록, Codex upstream 서브커맨드·옵션 보존을 보고, fzf-tab 경로에서는 가짜 fzf로 선택했을 때 uuid가 삽입되는지, 타이핑한 글자가 fzf 검색어가 되고 삽입 시 치환되는지 본다. `FZF_TAB_PLUGIN`으로 fzf-tab 경로를 지정하거나 빈 값으로 그 절을 건너뛴다.
+임시 Claude transcript와 Codex DB를 만들어 개인 세션 저장소 대신 사용하고, zpty로 대화형 zsh를 띄워 실제 키 입력으로 검사한다. 일반 compsys 경로에서는 후보와 그룹 헤더, alias를 거친 호출, `claude --` 옵션 목록, Codex upstream 서브커맨드·옵션 보존을 본다. fzf-tab 경로에서는 가짜 fzf로 선택했을 때 uuid가 삽입되는지, 타이핑한 글자가 fzf 검색어가 되고 삽입 시 치환되는지, 표시가 충돌한 두 세션을 각각 고를 수 있는지 본다. 셸 문법이 들어 있는 cwd·타이틀의 비실행과 재설치 시 파일 갱신·중첩 부재도 검사한다. `FZF_TAB_PLUGIN`으로 fzf-tab 경로를 지정하거나 빈 값으로 그 절을 건너뛴다.
 
 수동 확인은 `claude --resume ` 뒤 Tab이다. 후보가 없으면 `zsh <dir>/resume-sessions claude | head`로 데이터 소스부터 본다.
 
@@ -79,11 +79,11 @@ zstyle ':fzf-tab:complete:*:(claude|codex)-session' fzf-flags --preview-window=d
 
 ## Gotchas
 
-- fzf-tab은 `compadd -d`로 표시 문자열이 주어지면 단어 대신 그 문자열만 보여준다. 그래서 목록에 uuid가 통째로 보이지 않는다. 대신 미리보기가 표시 문자열로 후보를 역조회하므로 표시 문자열은 후보마다 유일해야 하고, 그래서 짧은 id를 끝에 붙인다. 같은 타이틀의 세션이 실제로 여럿 있다.
+- fzf-tab은 `compadd -d`로 표시 문자열이 주어지면 단어 대신 그 문자열만 보여준다. 삽입과 미리보기가 표시 문자열로 후보를 역조회하므로 표시 문자열은 후보마다 유일해야 한다. 끝에 id 앞 8자리를 붙이고, 표시가 충돌한 후보는 전체 UUID로 확장한다. UUIDv7의 앞 8자리는 시간 접두어라 유일하지 않다.
 - fzf-tab은 후보들의 공통 접두어가 있으면 fzf를 열기 전에 그 접두어를 먼저 삽입한다. Codex 세션 id는 UUIDv7이라 전부 `01`로 시작해 첫 Tab에 `01`만 들어가는 증상이 난다. 후보 생성 함수가 `compstate[insert]=automenu`로 이 단계를 끈다.
 - fzf-tab은 마지막 compadd 호출의 context로 preview·flags zstyle을 찾는다. Codex는 upstream `_arguments`가 세션 후보 뒤에 다시 compadd를 불러 context가 `codex-command-resume`으로 덮이므로, 플러그인의 Codex zstyle은 그 context까지 함께 매칭한다. 이게 빠지면 Codex만 미리보기 창이 없다.
 - fzf-tab은 compsys의 알파벳 정렬을 따로 적용한다. `sort false` zstyle이 빠지면 최신순이 타이틀 순으로 바뀐다.
-- 후보는 `compadd -U`로 typed prefix 필터를 끈다. `claude -r lotte` 뒤 Tab에서 `lotte`가 uuid 필터가 아니라 fzf 검색어가 돼야 하기 때문이다. fzf-tab이 선택한 후보를 다시 넣을 때 typed 문자열이 치환되는 것은 테스트 `f2`가 보장한다.
+- 후보는 `compadd -U`로 typed prefix 필터를 끄고, fzf-tab의 `query-string input first`로 입력한 검색어를 우선한다. `claude -r lotte` 뒤 Tab에서 `lotte`가 uuid 필터나 타이틀의 공통 접두어가 아니라 fzf 검색어가 돼야 하기 때문이다. 선택한 후보를 다시 넣을 때 입력 문자열도 치환한다.
 - `codex completion zsh`가 생성하는 spec은 top-level에 선택적 `prompt` 위치 인자를 서브커맨드 앞에 두어서, 있는 그대로 쓰면 `codex resume` 뒤 Tab이 `resume`을 prompt로 먹고 서브커맨드 목록을 낸다. `_codex`가 그 줄을 지우고 dispatch 인덱스를 `$line[2]`에서 `$line[1]`로 보정한다. Codex 버전이 바뀌어 치환 검증이 실패하면 upstream 없이 최소 동작(`resume`·`fork` 다음 단어만 세션 후보)으로 내려간다. `codex` 뒤 Tab이 서브커맨드 대신 파일을 내면 그 상태다.
 - `~/.claude/projects/` 디렉토리 이름은 cwd 인코딩 규칙이 Claude Code 버전마다 달라(`.`·공백·`_` 보존 여부) 역변환할 수 없다. 현재 디렉토리 그룹은 transcript의 `cwd`로 판정하므로, worktree에서 시작한 세션은 main repo 디렉토리에서는 "다른 프로젝트"로 보인다.
 - Claude 전체 스캔은 transcript 수백 MB 기준 수 초다. 파일 경로와 mtime을 키로 TSV 캐시를 두고 바뀐 파일만 다시 읽는다. 타이틀이 이상하면 캐시 파일을 지우고 다시 만든다.

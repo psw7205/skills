@@ -19,6 +19,7 @@ zstyle ':completion:*:(claude|codex)-session' sort false
   zstyle $codex_ctx fzf-preview "$RESUME_COMPLETION_DIR/resume-preview codex \$word"
   local ctx
   for ctx in $claude_ctx $codex_ctx; do
+    zstyle $ctx query-string input first
     zstyle $ctx fzf-flags --preview-window=right,50%,wrap
     zstyle $ctx switch-group '<' '>'
   done
