@@ -60,6 +60,7 @@
         "./skills/statusline",
         "./skills/resume-completion",
         "./skills/setup-global-config",
+        "./skills/setup-output-style",
         "./skills/rn-cdp-bridge",
         "./skills/agent-native-audit"
       ]

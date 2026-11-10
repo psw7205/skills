@@ -56,6 +56,7 @@
 | `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
 | `resume-completion` | `claude --resume`·`codex resume` 뒤 Tab에서 세션을 타이틀·시각·짧은 id로 고르는 zsh completion (표시 충돌 시 전체 UUID, fzf-tab이면 fzf 창+미리보기, 현재 디렉토리/다른 프로젝트 그룹, Codex 내장 completion 보존, 재실행 가능한 설치·갱신) | "resume 자동완성 설치", "세션 picker 설치", "claude resume tab" |
 | `setup-global-config` | tool-agnostic 공통 원칙을 Claude Code와 Codex에 byte-identical하게 설치·검증·제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
+| `setup-output-style` | Claude Code 한국어 간결 응답 output style(`korean-concise`) 설치·선택·제거 (project `outputStyle` 우선순위 점검, Codex는 output style 없음) | "output style 설치", "한국어 output style", "답변이 영어로 나와" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log·네트워크 브릿지 + release 크래시를 debug+Metro로 진단 + 실기기 debug 빌드 툴체인 함정 | "console.log 안 보여", "Metro 로그 안 나와", "release 크래시가 안 잡혀", "화면 진입하면 죽어" |
 | `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
 
