@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Contract tests for the guard hooks.
 
-Run: python3 skills/setup-hooks/scripts/test-guard-rules.py
+Run: python3 skills/setup-machine/scripts/test-guard-rules.py
 
 Black-box like test-auto-backup.sh: both hooks are invoked as subprocesses with
 the PreToolUse payload they see in production, so the JSON contract and the two

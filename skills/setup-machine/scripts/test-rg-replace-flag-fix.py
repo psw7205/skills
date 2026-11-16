@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Contract tests for rg-replace-flag-fix.py.
 
-Run: python3 skills/setup-hooks/scripts/test-rg-replace-flag-fix.py
+Run: python3 skills/setup-machine/scripts/test-rg-replace-flag-fix.py
 
 Black-box like test-auto-backup.sh: the hook is invoked as a subprocess with the
 PreToolUse payload it sees in production, so the JSON contract is covered too.

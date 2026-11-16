@@ -17,7 +17,7 @@ eval "$(echo "$input" | jq -r '
 branch=""
 if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
   branch=$(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null)
-  [ -z "$branch" ] && branch=$(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" describe --short HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+  [ -z "$branch" ] && branch=$(GIT_OPTIONAL_LOCKS=0 git -C "$cwd" describe --tags --always HEAD 2>/dev/null)
 fi
 
 # Line 1: dirname + branch + worktree
@@ -28,6 +28,15 @@ line1=$(printf "\033[0;34m%s\033[0m" "$short_cwd")
 [ -n "$wt_name" ]    && line1=$(printf "%b \033[0;36m🌿%s\033[0m" "$line1" "$wt_name")
 [ -n "$model_name" ] && line1=$(printf "%b \033[0;90m|\033[0m \033[0;37m✳ %s\033[0m" "$line1" "$model_name")
 
+# GNU date takes "@epoch" with -d; BSD date takes epoch with -r and has no -d.
+fmt_hm() {
+  case "$1" in
+    '') ;;
+    *[!0-9]*) date -d "$1" '+%H:%M' 2>/dev/null ;;
+    *) date -d "@$1" '+%H:%M' 2>/dev/null || date -r "$1" '+%H:%M' 2>/dev/null ;;
+  esac
+}
+
 # Line 2: ctx + rate limit + lines changed
 parts=""
 if [ -n "$ctx_used" ]; then
@@ -37,9 +46,8 @@ fi
 if [ -n "$rate_used" ]; then
   rate_int=$(printf "%.0f" "$rate_used")
   reset_str=""
-  if [ -n "$rate_resets" ]; then
-    reset_str=" →$(date -r "$rate_resets" '+%H:%M')"
-  fi
+  reset_at=$(fmt_hm "$rate_resets")
+  [ -n "$reset_at" ] && reset_str=" →$reset_at"
   [ -n "$parts" ] && parts=$(printf "%b %b " "$parts" "$sep")
   parts=$(printf "%b\033[0;33mused %s%%%s\033[0m" "$parts" "$rate_int" "$reset_str")
 fi
@@ -53,3 +61,4 @@ fi
 
 printf "%b\n" "$line1"
 [ -n "$parts" ] && printf "%b" "$parts"
+exit 0

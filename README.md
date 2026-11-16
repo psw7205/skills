@@ -14,7 +14,6 @@
 |------|------|------------|
 | `commit-msg` | 커밋 메시지 추천 (실행 안 함) + 가드레일 체크 | "커밋 만들어", "커밋 메시지 추천", "뭐라고 커밋하지" |
 | `commit-regroup` | push 전 로컬 커밋을 논리 단위로 재구성 (soft-reset 재배치 + 트리 동일성 검증) | "커밋 묶어줘", "로컬 커밋 grouping", "push 전에 커밋 정리해줘" |
-| `setup-hooks` | shell 명령 안전 훅 설치/제거 (Claude auto-stash, Codex deny-only guard, force push deny, `rg --replace` deny) | "hooks 설치", "codex hook 설치", "guard 설치", "훅 제거", "rg -r 막아줘" |
 | `trace-change-why` | 코드 변경의 WHY(원인, 동기, 판단 근거)를 세션 트랜스크립트에서 추적 | "왜 이렇게 바꿨어?", "이 변경 이유가 뭐야?" |
 | `git-diagnosis` | Git 이력 기반 코드베이스 건강 진단 — 교차 분석으로 고위험 코드 식별 | "프로젝트 분석해줘", "코드베이스 진단", "codebase audit" |
 | `worktree-lifecycle` | git worktree lifecycle 4단계(setup/working/prep/cleanup) 식별 + fast-path 결정 트리 + squash 직전 정리 가이드 | "worktree 만들까", "여기서 바로 할까", "main 머지 준비", "worktree 정리" |
@@ -31,8 +30,6 @@
 | `pstack-codex` | pstack 원본 스킬의 Cursor 도구·모델·경로를 Codex로 매핑하고 모든 서브에이전트에 어댑터를 전달하는 실행 진입점 | "Codex에서 pstack", "poteto-mode로 작업", "use pstack in Codex" |
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
-| `session-log` | Stop 이벤트마다 마지막 user/assistant 교환을 세션당 1개 md에 자동 append하는 훅 설치/제거 | "세션 로그 훅 설치", "세션 자동 기록", "세션 로그 제거" |
-| `verify-gate` | Claude Code·Codex의 Stop 훅으로 근거 없는 미확인 보고를 감지해 한 번 더 검증하게 함. CLI별 출력, Markdown 보고·미확인 섹션·사용자에게 넘긴 확인·명령과 blocker 판정, 사용자 중단·거부 뒤 재시도 요구 생략 (jq, 설치/제거) | "verify gate 설치", "Codex 검증 훅 설치", "확인 안 하고 멈추는 것 막아줘", "미확인 보고 차단" |
 | `session-bridge` | Claude Code/Codex CLI/OpenCode transcript를 session id로 찾아 handoff 요약 작성 | "claude 세션 이어서", "opencode session handoff" |
 | `session-cost-audit` | Claude Code transcript 토큰 집계 → 비용 방정식 항(요청/턴·컨텍스트·cache 재구축 원인·도구 출력·subagent 모델·effort)과 anti-pattern flag 보고 | "세션 비용 분석", "토큰 어디서 새", "캐시 미스 확인", "cost dashboard" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
@@ -42,8 +39,8 @@
 
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
-| `setup-machine` | 새 머신 기본 환경 오케스트레이션 (글로벌 설정·훅·세션 로그·statusline·herdr를 순서·충돌 관리 하에 설치, 점검 모드 지원) | "새 머신 셋업", "개발 환경 셋업해줘", "환경 점검해줘" |
-| `setup-dotfiles` | 셸·brew·mise 기준선 설치·대조 (번들 zshenv/zprofile/zshrc/Brewfile/mise, 머신 고유 값은 `.local` 분리) | "dotfiles 설치", "zshrc 셋업", "Brewfile 적용", "dotfiles 대조" |
+| `setup-machine` | 머신 셋업·싱크·업데이트 반영 진입점. dotfiles·herdr 위임 + Claude Code·Codex 계층(글로벌 지침, output style, statusline, 셸 가드·Artifact 가드, verify-gate, 세션 로그)을 `sync.py`로 check→apply, 위치 보존 handler 마이그레이션, 머신별 끄기 기록 | "새 머신 셋업", "싱크 맞춰줘", "스킬 업데이트 반영해줘", "verify gate 꺼줘", "아티팩트 막아줘" |
+| `setup-dotfiles` | 셸·brew·mise 기준선 설치·대조 (번들 zshenv/zprofile/zshrc/Brewfile/mise, 머신 고유 값은 `.local` 분리) + `claude --resume`·`codex resume` Tab 세션 picker(resume-completion) 설치·갱신 | "dotfiles 설치", "Brewfile 적용", "dotfiles 대조", "resume 자동완성 설치" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | "cmux 사용법", "cmux 설정", "cmux 브라우저", "cmux sidebar" |
 | `setup-herdr` | herdr `config.toml`을 다른 머신으로 이식·검증 (OS별 경로, byte-exact 전송, `config check` 3단 진단, remote attach 키 소유권) | "herdr 설정 이식", "윈도우에 herdr 설정 적용", "herdr prefix 바꿔줘", "herdr 단축키 안 먹어" |
@@ -53,10 +50,6 @@
 | `tailnet-server-hardening` | 클라우드 VM 관리 경로를 Tailscale로 옮기고 공개 SSH를 닫는 순서·검증(키 만료, sshd 실효값, 2중 방화벽, CDN 대역 제한, 비상 경로) + 바깥·서버 안·OCI control plane 3지점 read-only 점검 스크립트 | "서버 SSH 포트 닫기", "tailscale로만 서버 접속", "서버 헬스체크", "node key expired" |
 | `mac-disk-reclaim` | macOS 개발 머신 디스크 회수 — read-only 실측 스크립트, 재생성 비용 기준 A/B/C 등급, 되살릴 수 없는 데이터는 사본 체크섬 검증 후 삭제, VM 디스크 fstrim | "디스크 용량 확보", "맥 용량 줄이기", "Docker 용량 줄이기", "free up disk space on mac" |
 | `karabiner-rules` | Karabiner complex modification 작성·디버깅 — remap 이후 modifier로 매칭되는 모델, 출력이 시스템 단축키에 먹히는 문제, `select_input_source` race와 hold 완화, 프로필별 규칙, lint가 exit 0으로 에러를 숨기는 함정 | "karabiner 안 먹어", "cmd를 ctrl로 바꿨더니 조합이 안 돼", "한글 상태에서 단축키 깨져" |
-| `statusline` | Claude Code statusline 스크립트 설치 (2줄: dir+branch+worktree / ctx+rate+lines) | "statusline 설치", "상태바 설치" |
-| `resume-completion` | `claude --resume`·`codex resume` 뒤 Tab에서 세션을 타이틀·시각·짧은 id로 고르는 zsh completion (표시 충돌 시 전체 UUID, fzf-tab이면 fzf 창+미리보기, 현재 디렉토리/다른 프로젝트 그룹, Codex 내장 completion 보존, 재실행 가능한 설치·갱신) | "resume 자동완성 설치", "세션 picker 설치", "claude resume tab" |
-| `setup-global-config` | tool-agnostic 공통 원칙을 Claude Code와 Codex에 byte-identical하게 설치·검증·제거 | "글로벌 설정 설치", "공용 CLAUDE.md 설치", "install global config" |
-| `setup-output-style` | Claude Code 한국어 간결 응답 output style(`korean-concise`) 설치·선택·제거 (project `outputStyle` 우선순위 점검, Codex는 output style 없음) | "output style 설치", "한국어 output style", "답변이 영어로 나와" |
 | `rn-cdp-bridge` | RN 0.77+ Metro CDP 디버깅 — console.log·네트워크 브릿지 + release 크래시를 debug+Metro로 진단 + 실기기 debug 빌드 툴체인 함정 | "console.log 안 보여", "Metro 로그 안 나와", "release 크래시가 안 잡혀", "화면 진입하면 죽어" |
 | `agent-native-audit` | 프로젝트의 agent 친화도를 7개 축으로 점수화 + P1/P2/P3 개선 추천 | "agent-native 점검", "이 레포 agent에 최적화돼 있어?", "AGENTS.md 점검" |
 

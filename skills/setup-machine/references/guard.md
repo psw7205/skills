@@ -1,18 +1,6 @@
----
-name: setup-hooks
-description: >
-  위험한 shell 명령을 막는 안전 훅을 Claude Code와 Codex 설정에 설치하거나 제거하는 스킬.
-  파괴적 git 명령 auto-stash, force push 차단, rg --replace 차단을 포함한다.
-  "hooks 설치", "guard 설치", "setup hooks", "install hooks", "훅 설정",
-  "codex hook 설치", "hooks 제거", "guard 제거", "uninstall hooks", "훅 삭제",
-  "rg -r 막아줘", "위험한 명령 차단" 등에서 트리거.
----
+# shell-guard · artifact-guard
 
-# setup-hooks
-
-이 플러그인에 포함된 shell 명령 안전 훅을 사용자의 CLI 도구 설정에 등록하거나 제거한다.
-
-설치 요청을 받으면 대상 에이전트를 먼저 확인한다. 사용자가 `Codex`, `codex hook`, `~/.codex`를 언급하면 Claude Code 설정을 건드리지 말고 Codex 전용 절차를 수행한다.
+`shell-guard`와 `artifact-guard` 컴포넌트의 판정·동작 계약이다. 등록은 `scripts/sync.py`가 한다.
 
 ## 스크립트 구성
 
@@ -24,16 +12,11 @@ description: >
 | `guard-commands-codex.py` | Codex용 훅. deny 전용 정책 |
 | `auto-backup.sh` | rewrite된 명령이 원 명령 앞에서 호출하는 백업 단계. 훅으로 등록하지 않는다 |
 | `rg-replace-flag-fix.py` | Claude Code용 훅. `rg -rn` 형태 short-flag 클러스터를 rewrite로 교정 |
-| `install-codex-hook.sh` | Codex `hooks.json` 등록/해제 |
+| `guard-artifact.py` | Claude Code용 훅. 사용자가 요청하지 않은 Artifact 호출을 deny. 다른 스크립트와 독립 |
 | `test-guard-rules.py` | 두 guard 훅 계약 테스트. `python3 test-guard-rules.py` |
 | `test-auto-backup.sh` | `auto-backup.sh` 계약 테스트. `bash test-auto-backup.sh` |
 | `test-rg-replace-flag-fix.py` | `rg-replace-flag-fix.py` 계약 테스트. `python3 test-rg-replace-flag-fix.py` |
-
-```
-${CLAUDE_PLUGIN_ROOT}/skills/setup-hooks/scripts/guard-commands.py
-${CLAUDE_PLUGIN_ROOT}/skills/setup-hooks/scripts/rg-replace-flag-fix.py
-~/.agents/skills/setup-hooks/scripts/guard-commands-codex.py
-```
+| `test-guard-artifact.py` | `guard-artifact.py` 계약 테스트. `python3 test-guard-artifact.py` |
 
 세 훅은 모두 같은 디렉토리의 `shell_lex.py`와 `guard_rules.py`를 import하고, rewrite된 명령은 `auto-backup.sh`를 절대경로로 호출한다. 파일은 항상 함께 배치한다 — import가 실패하면 훅은 조용히 통과하므로 아무것도 지키지 않는다.
 
@@ -111,6 +94,16 @@ Codex 훅은 shell command rewrite를 하지 않는다. 현재 Codex 훅 출력�
 
 교정 범위는 **인용 밖 토큰뿐이다**. 따옴표 안 텍스트와 heredoc 본문은 플래그가 아니라 데이터라서, 건드리면 명령의 동작이 아니라 명령이 남기는 내용이 바뀐다 — `echo "rg -rn 쓰지 마세요" >> notes.md`가 반대 뜻을 파일에 기록하고, 피해가 검색 한 번이 아니라 파일에 남는다. 탐지는 `shell_lex.py`가 인용 구간을 지운 사본에서 하고 치환은 원본에 적용해 두 위치가 어긋나지 않게 한다. 계약 테스트는 `python3 test-rg-replace-flag-fix.py`.
 
+## Artifact 게이트
+
+Claude Code의 `Artifact` 도구는 결과를 claude.ai 페이지로 publish한다. 도구 지침이 "요청 없이도 publish해도 된다"고 하므로 메모리나 규칙 문장만으로는 막히지 않는다. `guard-artifact.py`가 호출마다 세션 transcript를 읽어 판정한다.
+
+- 사용자가 직접 입력한 메시지만 본다. tool 결과, skill 본문, task 알림, system reminder는 제외한다.
+- `아티팩트`·`아티펙트`·`artifact`·`artifect`를 언급하거나 claude.ai artifact 링크를 붙인 메시지가 허용을 켠다. 이후 후속 메시지("2번으로 가자")에도 허용이 유지된다.
+- 언급 앞뒤에 금지·불만 표현(`쓰지`, `말고`, `왜`, `제거`, `사용 안`, `때만` 등)이 있으면 그 메시지는 허용을 끈다. 나중 메시지가 이긴다.
+- "보여줘", "문서로", "슬라이드", "비교표"는 Artifact 요청이 아니다. 이 경우 deny 사유가 로컬 파일로 보여주라고 안내한다.
+- transcript를 읽지 못하면 deny한다. 다른 훅과 달리 fail-closed다. 외부 publish는 되돌리기 어렵기 때문이다.
+
 ## 프로토콜
 
 ### Claude Code
@@ -124,91 +117,15 @@ Codex 훅은 shell command rewrite를 하지 않는다. 현재 Codex 훅 출력�
 - **출력**: 차단 시 `hookSpecificOutput.permissionDecision: "deny"`와 non-empty `permissionDecisionReason`
 - **제약**: `permissionDecision: "allow" | "ask"`, `updatedInput`, `additionalContext`는 사용하지 않는다.
 
-## 설치 가이드
-
-### Claude Code (`~/.claude/settings.json`)
-
-`hooks.PreToolUse` 배열에 Bash matcher로 등록한다. 이미 Bash matcher가 있으면 해당 `hooks` 배열에 추가한다.
-
-```jsonc
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          // ... 기존 훅들 ...
-          {
-            "type": "command",
-            "command": "python3 /absolute/path/to/guard-commands.py",
-            "statusMessage": "Guarding risky shell commands..."
-          },
-          {
-            "type": "command",
-            "command": "python3 /absolute/path/to/rg-replace-flag-fix.py",
-            "statusMessage": "Repairing rg flag clusters..."
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-ref: https://code.claude.com/docs/en/hooks
-
-### Codex (`~/.codex/hooks.json`)
-
-`npx skills add ./`는 스킬 파일을 설치/동기화하는 단계이고, hook 등록은 별도 설정 파일 변경이다. Codex hook 설치 요청까지 받은 경우 다음 순서로 끝까지 수행한다.
-
-1. `npx skills add ./ -g --skill setup-hooks --agent '*' -y` 또는 사용자가 지정한 `npx skills` 설치 명령으로 최신 `setup-hooks`를 설치한다.
-2. 설치된 스킬 경로의 등록 스크립트를 실행한다.
-
-```bash
-bash ~/.agents/skills/setup-hooks/scripts/install-codex-hook.sh install
-```
-
-제거:
-
-```bash
-bash ~/.agents/skills/setup-hooks/scripts/install-codex-hook.sh remove
-```
-
-이 스크립트는 구 이름(`guard-commands-codex.sh`, `guard-untracked-codex.sh`)으로 등록된 handler도 함께 제거하므로 중복 등록이 생기지 않는다.
-
-### 다른 CLI 도구
-
-동일한 stdin/stdout JSON 프로토콜을 지원하는 도구라면 해당 도구의 pre-execution hook에 `python3 /path/to/guard-commands.py`를 등록한다. 도구별 설정 문서를 참조.
-
-## 설치/제거 절차
-
-Claude Code 대상으로 "훅 설치해줘" 또는 "훅 제거해줘"라고 요청하면:
-
-1. **설치 시**: `~/.claude/settings.json`을 읽고, `hooks.PreToolUse`에 `guard-commands.py`와 `rg-replace-flag-fix.py` 항목이 없으면 추가한다. 기존 Bash matcher가 있으면 그 `hooks` 배열에 append한다.
-2. **구 이름 정리**: command에 `guard-commands.sh` 또는 `guard-untracked.sh`가 포함된 항목이 있으면 함께 제거한다. 남겨두면 훅이 이중 등록되어 stash가 두 번 생기고, 삭제된 스크립트를 가리키는 항목은 매 Bash 호출마다 에러를 낸다.
-3. **제거 시**: Bash matcher에서 두 항목만 제거한다. Bash matcher의 hooks가 비면 matcher 자체를 제거한다.
-4. 설정 변경 후 Claude Code 재시작 필요.
-
-이미 해당 파일명이 command에 포함되어 있으면 skip한다.
-
-Codex 대상으로 "codex hook 설치해줘"라고 요청하면:
-
-1. `~/.codex/hooks.json`이 있는지 확인한다.
-2. `install-codex-hook.sh install`을 실행한다.
-3. `jq`로 `~/.codex/hooks.json`을 파싱하고 `guard-commands-codex.py` handler가 하나만 있는지 확인한다.
-4. **`~/.codex/config.toml`에 `[features] codex_hooks = true`가 있는지 확인한다.** 없으면 hooks.json을 써도 Codex가 읽지 않는다. 설치 스크립트가 경고를 내지만 파일을 대신 고치지는 않는다.
-5. 설정 변경 후 Codex 재시작 필요.
-
 ## Gotchas
 
-- settings.json은 세션 시작 시 로드된다. 설치/제거 후 반드시 재시작.
-- Codex 훅은 `[features].codex_hooks = true`가 없으면 아예 실행되지 않는다. hooks.json은 정상적으로 쓰이고 설치도 성공으로 보고되므로, 이 플래그를 확인하지 않으면 훅이 있다고 믿는 채로 아무 보호도 받지 못한다.
+- Codex 훅은 `hooks` 기능(`codex features list`)이 꺼져 있으면 실행되지 않는다. 옛 키 이름은 `codex_hooks`다. `sync.py`는 키 이름이 아니라 `codex features` 결과로 판정하고 꺼져 있으면 `codex features enable hooks`로 켠다.
 - Codex의 shell 도구는 rollout 로그에서 `exec`, 훅 payload에서 `Bash`로 나타난다. matcher는 regex이므로 `Bash|exec`로 양쪽을 덮고, 스크립트의 `SHELL_TOOLS`가 다시 거른다.
 - 판정은 세그먼트의 command word 기준이다. `env`·`sudo`·`nohup`·`xargs` 같은 투명 래퍼, 서브셸 `( )`, brace group `{ }`, `sh -c "..."`의 인자 문자열까지는 읽는다. 읽지 못하는 것은 값이 실행 시점에 정해지는 형태다 — `$(...)` 치환 결과, 변수에 담긴 명령, 파일에서 읽어 실행하는 스크립트. 이 훅은 실수 방지 장치이지 sandbox가 아니고, 우회를 작정한 입력을 막지 않는다.
 - heredoc 본문은 통과한다. `bash <<EOF`로 넘긴 파괴적 명령은 걸리지 않는다. 본문을 명령으로 읽으면 `cat > notes.md <<EOF` 같은 문서 작성이 파괴적 명령으로 판정되는 쪽이 훨씬 흔하고, 그 오탐은 문서를 쓰려던 명령 앞에 stash를 실행한다.
 - 한 명령에 여러 판정이 걸리면 가장 나쁜 것이 이긴다. deny 대상(`git push --force`, `rg --replace`)이 rewrite 대상보다 앞서고, 교정 가능한 `rg -r` 클러스터가 가장 뒤다. 첫 세그먼트로 판정하면 `rg -rn foo . && git push --force`가 교정 훅에 넘어가면서 force push까지 통과한다.
 - 재작성은 원 명령을 brace group으로 감싼다. `auto-backup.sh ... && { <원 명령> }` 형태라야 `echo hi ; git reset --hard`처럼 `;`로 분리된 파괴적 명령까지 백업 실패에 막힌다. 닫는 중괄호가 별도 줄에 있는 이유는 원 명령 끝에 heredoc이 올 수 있어서다.
-- stdin이 JSON이 아니거나 sibling 모듈을 import할 수 없으면 훅은 조용히 exit 0 한다. 훅이 매 Bash 호출마다 에러를 내는 것이 차단 실패보다 나쁘다. 세 훅 모두 `python3`를 요구하고, `jq`는 더 이상 훅 실행에 필요하지 않다(`install-codex-hook.sh`는 여전히 사용).
+- stdin이 JSON이 아니거나 sibling 모듈을 import할 수 없으면 훅은 조용히 exit 0 한다. 훅이 매 Bash 호출마다 에러를 내는 것이 차단 실패보다 나쁘다. 세 훅 모두 `python3`를 요구하고 `jq`는 필요하지 않다.
 - `rg -rn` 클러스터 교정은 Claude Code 전용이다. Codex는 rewrite를 지원하지 않아 같은 입력을 deny하고 교정 방법만 안내한다.
 - 판정 로직을 고치면 `python3 test-guard-rules.py`를 돌린다. 두 훅을 subprocess로 실행해 Claude Code의 rewrite/deny/pass와 Codex의 deny/pass를 함께 확인하므로, 정책 분기까지 회귀 판정 범위에 들어간다.
 - stdin은 판정보다 먼저 읽는다. 읽기 전에 빠져나가면 호출자 쪽 write가 EPIPE로 실패한다.

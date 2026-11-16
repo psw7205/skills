@@ -3,15 +3,18 @@ name: setup-dotfiles
 description: >
   셸 설정, Homebrew 패키지, mise 툴체인의 기준선을 새 머신에 설치하거나 현재 머신과 대조하는 스킬.
   번들된 zshenv·zprofile·zshrc·Brewfile·mise 설정을 기존 파일과 병합하고, 머신 고유 값은 로컬 파일로 분리한다.
+  `claude --resume`·`codex resume` Tab에서 세션을 고르는 resume-completion zsh 플러그인도 설치·갱신한다.
   "dotfiles 설치", "zshrc 셋업", "셸 설정 이식", "셸 설정 정리", "zshenv zprofile zshrc 역할 점검",
   "non-interactive 셸에서 PATH 안 잡혀", "brew 패키지 설치", "Brewfile 적용",
   "mise 툴체인 설정", "dotfiles 대조", "brew 목록 갱신해줘",
-  "install dotfiles", "setup shell config", "apply Brewfile", "zsh startup files" 등에서 트리거.
+  "resume 자동완성", "claude resume tab", "codex resume tab", "세션 picker 설치", "세션 자동완성 안 떠",
+  "install dotfiles", "setup shell config", "apply Brewfile", "zsh startup files",
+  "install resume completion" 등에서 트리거.
 ---
 
 # setup-dotfiles
 
-셸·패키지·툴체인 기준선을 다룬다. 에이전트 계층(글로벌 지침, 훅, statusline)은 `setup-machine`이 조율하고 이 스킬은 그 아래 계층만 소유한다.
+셸·패키지·툴체인 기준선을 다룬다. 에이전트 계층(글로벌 지침, 훅, statusline)은 `setup-machine`이 맡고 이 스킬은 그 아래 계층만 소유한다.
 
 ## 번들 파일
 
@@ -22,15 +25,29 @@ description: >
 | `references/zshenv` | `~/.zshenv` |
 | `references/zprofile` | `~/.zprofile` |
 | `references/zshrc` | `~/.zshrc` |
+| `scripts/resume-completion/` | `${ZSH_CUSTOM:-$ZSH/custom}/plugins/resume-completion/` (복사) |
 
-`${CLAUDE_PLUGIN_ROOT}/skills/setup-dotfiles/references/` 또는 `~/.agents/skills/setup-dotfiles/references/` 로 resolve한다.
+이 `SKILL.md` 기준 상대 경로로 resolve한다(전역 설치 시 `~/.agents/skills/setup-dotfiles/`).
 
 ## 설치 순서
 
 1. **Brewfile** — 셸 설정이 `zoxide`, `fzf`, `fd`, `fx`, `bat`를 전제하므로 패키지가 먼저다. 이 순서가 뒤집히면 새 셸이 매번 `command not found`를 낸다.
 2. **mise 설정** — 언어 런타임. Brewfile은 `mise` 자체만 깔고 런타임은 mise가 관리한다.
 3. **zshenv → zprofile → zshrc** — 모든 셸 공통값, 로그인 셸의 PATH와 shellenv, 대화형 설정 순서다. 무엇을 어디에 두는지는 아래 "파일 역할"이 정한다.
-4. **oh-my-zsh 커스텀 플러그인** — `fzf-tab`, `zsh-autosuggestions`, `fast-syntax-highlighting`은 oh-my-zsh 번들이 아니다. `$ZSH_CUSTOM/plugins/`에 각각 clone해야 하고, 없으면 셸 시작 시 경고가 난다. `resume-completion`은 clone 대상이 아니라 `resume-completion` 스킬의 설치 절차가 같은 위치에 복사한다.
+4. **oh-my-zsh 커스텀 플러그인** — `fzf-tab`, `zsh-autosuggestions`, `fast-syntax-highlighting`은 oh-my-zsh 번들이 아니다. `$ZSH_CUSTOM/plugins/`에 각각 clone해야 하고, 없으면 셸 시작 시 경고가 난다.
+5. **resume-completion** — 번들 zshrc의 `plugins=`에 이미 들어 있으므로 빠지면 셸 시작 시 경고가 난다. 아래 절차로 설치한다.
+
+## resume-completion
+
+`claude --resume`·`codex resume` 뒤 Tab에서 세션을 타이틀·시각·짧은 id로 고른다. `fzf-tab`이 있으면 fzf 창과 미리보기, 없으면 zsh 기본 메뉴다. 구성·데이터 소스·설정·Gotchas는 `references/resume-completion.md`.
+
+1. 전제: `zsh`, `fzf`, `jq`(Claude 미리보기), `sqlite3`(Codex). 없는 의존은 그 부분만 빈다.
+2. 복사: `mkdir -p "${ZSH_CUSTOM:-$ZSH/custom}/plugins/resume-completion"` 후 `cp -R "<skill>/scripts/resume-completion/." "${ZSH_CUSTOM:-$ZSH/custom}/plugins/resume-completion/"`. symlink가 아니라 복사다 — 스킬 경로는 설치 도구가 바꿀 수 있다. oh-my-zsh가 아니면 임의 디렉토리에 복사하고 `compinit` 앞에 `fpath=(<dir> $fpath)`, 뒤에 `source <dir>/resume-completion.plugin.zsh`를 두고 `~/.zcompdump*`를 지운다.
+3. `~/.zshrc`의 `plugins=(...)`에 `resume-completion`이 없으면 한 줄만 추가하고 diff를 보인다.
+4. 캐시 예열: `zsh <dir>/resume-sessions claude >/dev/null`. 건너뛰면 첫 Tab이 수 초 멈춘다.
+5. 검증: `zsh <skill>/scripts/test-resume-completion.zsh`, 새 셸에서 `claude --resume ` 뒤 Tab.
+
+갱신은 스킬 업데이트 뒤 2를 다시 한다(복사본이라 자동으로 따라가지 않는다). 제거는 `plugins=`에서 빼고 플러그인 디렉토리와 캐시(`${XDG_CACHE_HOME:-~/.cache}/resume-completion`)를 지운다.
 
 ## 파일 역할
 
@@ -72,7 +89,7 @@ macOS에서 Terminal, IDE의 셸 환경 해석, Claude Code의 셸 스냅샷은 
 
 ## 대조 모드
 
-"dotfiles 대조", "뭐가 다른지 봐줘" 류 요청에서는 아무것도 쓰지 않는다. 다섯 대상의 diff와 Brewfile 양방향 차집합만 보고한다.
+"dotfiles 대조", "뭐가 다른지 봐줘" 류 요청에서는 아무것도 쓰지 않는다. 다섯 대상의 diff, Brewfile 양방향 차집합, 설치된 resume-completion 플러그인 복사본과 번들의 `diff -r`만 보고한다.
 
 세 셸 파일의 역할 분담이 지켜지는지는 diff가 아니라 실행으로 판정한다. `env -i HOME=$HOME /bin/zsh -lc 'command -v psql'`처럼 clean 환경의 login 셸에서 도구가 잡히는지, `zsh -lic 'print -l $path' | sort | uniq -d`가 비어 있는지 본다. 대화형 셸에서 잘 되는 설정이 이 검사에서 깨지면 PATH가 zshrc에 있다는 뜻이다.
 
