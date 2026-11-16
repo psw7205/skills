@@ -5,16 +5,21 @@ hook="$(cd "$(dirname "$0")" && pwd)/stop-verify-gate.sh"
 fail=0
 agent="${1:-claude}"
 
+fixtures=$(mktemp -d)
+trap 'rm -rf "$fixtures"' EXIT
+
 run() {
-  jq -nc --arg msg "$1" --argjson active "${2:-false}" --argjson bg "${3:-[]}" --arg agent "$agent" '
-    {session_id:"test-session", cwd:"/workspace", transcript_path:null, permission_mode:"default",
+  jq -nc --arg msg "$1" --argjson active "${2:-false}" --argjson bg "${3:-[]}" --arg agent "$agent" \
+    --arg transcript "${4:-}" '
+    {session_id:"test-session", cwd:"/workspace",
+     transcript_path:(if $transcript == "" then null else $transcript end), permission_mode:"default",
      hook_event_name:"Stop", stop_hook_active:$active, last_assistant_message:$msg}
     + if $agent == "codex" then {turn_id:"test-turn"} else {background_tasks:$bg} end
   ' | bash "$hook" "$agent"
 }
 
 expect_block() {
-  out=$(run "$2" "${3:-false}" "${4:-[]}")
+  out=$(run "$2" "${3:-false}" "${4:-[]}" "${5:-}")
   if jq -e --arg agent "$agent" '
     if $agent == "codex" then
       .decision == "block" and (.reason | startswith("verify-gate:"))
@@ -42,7 +47,7 @@ expect_flag() {
 }
 
 expect_pass() {
-  out=$(run "$2" "${3:-false}" "${4:-[]}")
+  out=$(run "$2" "${3:-false}" "${4:-[]}" "${5:-}")
   if [ -z "$out" ]; then echo "ok   pass:  $1"; else echo "FAIL pass:  $1 -> '$out'"; fail=1; fi
 }
 
@@ -118,6 +123,45 @@ expect_pass "보지 않고는 과거 서술" "로그를 보지 않고 재시작�
 expect_pass "확인 결과 서술" "로그에서 200 응답을 확인할 수 있습니다."
 expect_pass "직접 확인한 결과" "제가 직접 확인해 보니 키는 만료 상태였습니다."
 expect_pass "stop_hook_active" "확인하지 못했습니다." true
+expect_pass "사용자 중단 blocker" '- unresolved: 사용자 중단 — App Store Connect 계약 표 확인'
+expect_pass "영문 사용자 중단 blocker" 'unresolved: user interrupted — contract table check'
+expect_block "항목 없는 사용자 중단" 'unresolved: 사용자 중단'
+
+# transcript 이벤트: prompt(턴 시작) interrupt reject tool, decoy-a·decoy-b는 중단으로 오인하기 쉬운 비중단 신호
+transcript() {
+  local file="$fixtures/$1.jsonl"; shift
+  : >"$file"
+  for event in "$@"; do
+    case "$agent:$event" in
+      claude:prompt) jq -nc '{type:"user", message:{role:"user", content:"질문"}}' ;;
+      claude:interrupt) jq -nc '{type:"user", message:{role:"user", content:[{type:"text", text:"[Request interrupted by user]"}]}}' ;;
+      claude:reject) jq -nc '{type:"user", message:{role:"user", content:[{type:"tool_result", tool_use_id:"t1", is_error:true,
+        content:"The user doesn'"'"'t want to proceed with this tool use. The tool use was rejected."}]}}' ;;
+      claude:tool) jq -nc '{type:"user", message:{role:"user", content:[{type:"tool_result", tool_use_id:"t2", content:"ok"}]}}' ;;
+      claude:decoy-a) jq -nc '{type:"user", isSidechain:true, message:{role:"user", content:[{type:"text", text:"[Request interrupted by user]"}]}}' ;;
+      claude:decoy-b) jq -nc '{type:"user", message:{role:"user", content:[{type:"tool_result", tool_use_id:"t3", content:"ok"}]}}' ;;
+      codex:prompt) jq -nc '{type:"event_msg", payload:{type:"task_started"}}' ;;
+      codex:interrupt) jq -nc '{type:"event_msg", payload:{type:"turn_aborted", reason:"interrupted"}}' ;;
+      codex:reject) jq -nc '{type:"response_item", payload:{type:"function_call_output", call_id:"c1", output:"exec command rejected by user"}}' ;;
+      codex:tool) jq -nc '{type:"response_item", payload:{type:"function_call_output", call_id:"c2", output:"ok"}}' ;;
+      codex:decoy-a) jq -nc '{type:"response_item", payload:{type:"function_call_output", call_id:"c3", output:"writing outside of the project; rejected by user approval settings"}}' ;;
+      codex:decoy-b) jq -nc '{type:"event_msg", payload:{type:"turn_aborted", reason:"replaced"}}' ;;
+    esac >>"$file"
+  done
+  printf '%s' "$file"
+}
+
+claim="App Store Connect 계약 표는 확인하지 못했습니다."
+expect_pass "이번 턴 중단 뒤" "$claim" false '[]' "$(transcript current prompt tool interrupt prompt)"
+expect_pass "직전 턴 중단 뒤 새 질문" "$claim" false '[]' "$(transcript previous prompt prompt tool interrupt prompt tool)"
+expect_pass "직전 턴 도구 거부 뒤" "$claim" false '[]' "$(transcript rejected prompt reject prompt tool)"
+expect_block "두 턴 전 중단" "$claim" false '[]' "$(transcript old prompt interrupt prompt tool prompt tool)"
+expect_block "중단 없는 transcript" "$claim" false '[]' "$(transcript clean prompt tool prompt tool)"
+expect_block "중단이 아닌 신호" "$claim" false '[]' "$(transcript other prompt decoy-a decoy-b prompt tool)"
+expect_block "없는 transcript 경로" "$claim" false '[]' "$fixtures/missing.jsonl"
+printf 'not json\n' >"$fixtures/broken.jsonl"
+expect_block "깨진 transcript" "$claim" false '[]' "$fixtures/broken.jsonl"
+
 if [ "$agent" = "claude" ]; then
   expect_pass "background task 대기 중" "결과는 아직 확인하지 않았습니다." false '[{"id":"t1","type":"shell","status":"running"}]'
 fi
