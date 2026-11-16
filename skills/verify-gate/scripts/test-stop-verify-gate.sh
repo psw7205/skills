@@ -29,6 +29,18 @@ expect_block() {
   fi
 }
 
+expect_flag() {
+  out=$(run "$2")
+  if jq -e --arg agent "$agent" --arg needle "$3" '
+    (if $agent == "codex" then .reason else .hookSpecificOutput.additionalContext end)
+    | split("\n") | map(select(startswith("- "))) | any(contains($needle))
+  ' <<<"$out" >/dev/null 2>&1; then
+    echo "ok   flag:  $1"
+  else
+    echo "FAIL flag:  $1 -> '$out'"; fail=1
+  fi
+}
+
 expect_pass() {
   out=$(run "$2" "${3:-false}" "${4:-[]}")
   if [ -z "$out" ]; then echo "ok   pass:  $1"; else echo "FAIL pass:  $1 -> '$out'"; fail=1; fi
@@ -47,6 +59,22 @@ expect_block "섹션 아래 항목" $'## 확인하지 못한 것\n- 브라우저
 expect_block "Markdown으로 감싼 완료 보고" $'```markdown\n변경을 마쳤습니다.\n서버 상태는 확인하지 않았습니다.\n```'
 expect_block "예외 줄 뒤의 별도 미확인" $'unresolved: `gh auth status` — 로그인 거부\n브라우저에서는 확인하지 않았습니다.'
 expect_block "정상 요약 뒤의 별도 미확인" $'미확인 항목은 없습니다.\n서버 상태는 확인하지 않았습니다.'
+expect_block "미확인 섹션 아래 돌려 말한 항목" $'## 확인하지 못한 것\n\n- **GitHub Actions secrets:** org secrets 조회가 403으로 막혔습니다.\n- 이번 범위 밖이라 넘어갔습니다.'
+expect_block "굵은 글씨 미확인 섹션" $'**남은 확인**\n- 빌드 Mac의 키 파일 존재 여부'
+expect_block "섹션 제목 뒤 빈 줄과 문단" $'## 미확인\n\norg secrets 조회가 403으로 막혔습니다.'
+expect_block "굵은 문장은 제목이 아님" '**서버 상태는 확인하지 않았습니다.**'
+expect_block "동사 없는 보지 않음" "Bitbucket 레포는 보지 않았습니다."
+expect_block "사용자에게 확인 넘김" "빌드 Mac에 AuthKey 파일이 있는지도 확인해 볼 만합니다."
+expect_block "확인해 보시고" "시뮬레이터에서 확인해 보시고 괜찮으면 다음으로 진행할까요?"
+expect_block "직접 확인 요청" "팀 키 목록에서 직접 확인하실 수 있습니다."
+expect_block "영문 확인 넘김" "You may want to verify the key on the build Mac."
+expect_block "인용 밖의 미확인" '"A" 설정은 확인하지 못했습니다.'
+expect_block "backtick 라벨 unresolved" 'Cloudflare SSL 모드는 서버에서 확인할 수 없어 `unresolved` 상태예요.'
+expect_block "조사가 붙은 backtick 라벨" '핀치를 넣을 수단이 없어 0006 iOS 확인은 `unresolved`로 남게 됩니다.'
+expect_block "backtick 라벨 미확인" '- **증상이 난 실기기의 iOS 버전:** `미확인`. 기기 정보가 없습니다.'
+expect_block "보지 않은 활용형" "Ubuntu 부분은 아직 실제로 돌려 보지 않은 내용입니다."
+expect_block "보지 않은 것 섹션" $'**실행해 보지 않은 것**\n- iOS 실기기 화면'
+expect_block "아직 안 한 것 섹션" $'**아직 안 한 것**\n- Android 캡처'
 
 expect_pass "명령과 blocker가 있는 unresolved" 'unresolved: `gh auth status` — 세션이 만료돼 로그인이 거부됨'
 expect_pass "승인 대기로 실패한 unresolved" 'unresolved: `gh auth status` — 아직 로그인 승인이 없어 인증이 거부됨'
@@ -61,6 +89,27 @@ expect_pass "남은 미확인 없음" "미확인 항목은 없습니다."
 expect_pass "영문 미확인 없음" "No unverified items remain."
 expect_pass "사용자에게 묻는 확인 필요" "확인이 필요한 쪽은 둘 중 하나입니다. 어느 쪽인지 알려 주세요."
 expect_pass "과거 실수 설명" "제가 그걸 확인하지 않고 로컬 설정부터 바꾸는 바람에 잠시 실패했습니다."
+expect_flag "code span 사이의 미확인" '`a``b` 상태는 확인하지 못했습니다. `c``d`는 완료했습니다.' "확인하지 못했습니다"
+expect_flag "목록 없는 섹션의 빈 줄 뒤 문단" $'## 미확인\nunresolved: `gh auth status` — 로그인 거부\n\n빌드 Mac 키 파일 존재 여부' "빌드 Mac 키 파일"
+expect_flag "여러 항목 중 돌려 말한 항목" $'## 확인하지 못한 것\n- 브라우저에서는 확인하지 않았습니다.\n- org secrets 조회가 403으로 막혔습니다.' "403으로 막혔습니다"
+
+expect_pass "목록형 없음" $'## 확인하지 못한 것\n- 없음'
+expect_pass "번호 목록 없음" $'## 미확인\n1. 없음'
+expect_pass "굵은 글씨 없음" $'## 미확인\n- **없음**'
+expect_pass "미확인 없음 제목" $'## 미확인 항목은 없습니다\n- 테스트 12개 통과'
+expect_pass "직접 확인 불필요" "직접 확인하실 필요는 없습니다. 제가 이미 확인했습니다."
+expect_pass "확인해 볼 필요 없음" "확인해 보실 필요는 없습니다."
+expect_pass "섹션 안 근거 있는 blocker" $'## 미확인\n- unresolved: `gh api orgs/x/actions/secrets` — admin:org scope 없음(403)'
+expect_pass "목록 뒤 문단에서 섹션 종료" $'## 확인하지 못한 것\n- unresolved: `gh auth status` — 세션 만료로 거부됨\n\n나머지는 모두 통과했습니다.'
+expect_pass "다음 제목에서 섹션 종료" $'## 미확인\n없음\n## 변경\n- 배포했습니다.'
+expect_pass "판정 문구를 따옴표로 인용" '판정식은 "확인하지 못했습니다"나 “확인해 볼 만합니다” 같은 표현을 잡습니다.'
+expect_pass "판정 문구를 inline code로 인용" '`확인하지 못했습니다` 한 줄만 넣으면 바로 막힙니다.'
+expect_pass "두 겹 backtick 안의 형식 인용" '훅은 ``unresolved: `명령` — blocker`` 형식만 통과시킵니다.'
+expect_pass "두 겹 backtick 안의 라벨 인용" '응답이 `` `unresolved` ``를 라벨처럼 씁니다.'
+expect_pass "판정어가 섞인 inline code" '`미확인 제목` 같은 명사 표현이 걸렸습니다.'
+expect_pass "보지 않고는 과거 서술" "로그를 보지 않고 재시작부터 했던 것이 실수였습니다."
+expect_pass "확인 결과 서술" "로그에서 200 응답을 확인할 수 있습니다."
+expect_pass "직접 확인한 결과" "제가 직접 확인해 보니 키는 만료 상태였습니다."
 expect_pass "stop_hook_active" "확인하지 못했습니다." true
 if [ "$agent" = "claude" ]; then
   expect_pass "background task 대기 중" "결과는 아직 확인하지 않았습니다." false '[{"id":"t1","type":"shell","status":"running"}]'

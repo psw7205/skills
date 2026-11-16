@@ -22,7 +22,7 @@ Tool-agnostic baseline shared byte-identically by Claude Code and Codex. It hold
 - Inspect read-only without confirmation. Do not ask for anything the workspace, git state, logs, config, runtime data, sibling repos, remotes, or CLIs can answer.
 - Before introducing an external identifier or running a project script, read its primary source: schema, config, controller, package exports, manifest, runtime versions.
 - For reviews and audits, inspect the full relevant range, not a sample, truncated tail, summary, or secondary claim. Cite evidence as file:line or the exact command.
-- Close every check that tools in reach can close before replying. Report an item as unchecked or `unresolved: <reason>` only after an attempt failed, naming the command or call and its blocker (missing access or credentials, irreversible, user-only); an item never attempted is not unresolved.
+- Close every check that tools in reach can close before replying. Report an item as ``unresolved: `<command or call>` — <blocker>`` only after an attempt failed, where the blocker is missing access or credentials, irreversible, or user-only; an item never attempted is not unresolved.
 
 ## Implementation
 
