@@ -28,7 +28,7 @@ jq -c --arg agent "$agent" '
 
   def unverified_text:
     strip_quoted
-    | test("(확인|검증)하지 ?(않았|않은|못했|못한)|확인 ?못 ?했|확인(을)? ?안 ?했|아직 확인|미확인|보지 ?(않았|않은|못했|못한)|시도하지 ?않았|\\bunverified\\b|\\bunresolved\\b|\\b(did ?n[o'"'"']t|have ?n[o'"'"']t|not yet) (verif|check|test|run|tri)"; "i")
+    | test("(확인|검증)하지(?:는|도|조차|까지는?)? ?(않았|않은|못했|못한)|확인(?:을|은|도|까지는?)? ?(못|안) ?했|아직 확인|미확인|보지(?:는|도)? ?(않았|않은|못했|못한)|시도하지(?:는|도)? ?않았|\\bunverified\\b|\\bunresolved\\b|\\b(did ?n[o'"'"']t|have ?n[o'"'"']t|not yet) (verif|check|test|run|tri)"; "i")
       or test("(확인|검증|점검)해 ?(보세요|보시면|보시고|보시길|보실 ?수 ?있|볼 ?만|보면 ?좋|보는 ?(게|것이) ?좋)|직접 (확인|검증|점검)(하세요|하시면|하셔야|하실 ?수 ?있|해 ?(보세요|주세요|보시면)|할 ?수 ?있)|\\byou (can|could|may|might|should)( want to)? (double-?check|check|verify|confirm)\\b|\\bworth (checking|verifying)\\b"; "i");
 
   # 굵은 글씨 한 줄도 섹션 제목으로 쓰이지만, 문장으로 끝나면 보고 내용이다.

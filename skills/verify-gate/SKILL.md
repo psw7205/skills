@@ -26,7 +26,7 @@ Claude Code와 Codex의 `Stop` 훅으로 근거 없는 미확인 표현을 감�
 
 다음 표현이 있는 줄을 미확인 줄로 본다.
 
-- 미확인 보고: `확인하지 않았/못했`, `확인 못 했`, `아직 확인`, `미확인`, `보지 않았/못했`, `시도하지 않았`, `unverified`, `unresolved`, `did not/haven't/not yet verify·check·test·run`
+- 미확인 보고: `확인하지 않았/못했`, `확인 못 했`, `아직 확인`, `미확인`, `보지 않았/못했`, `시도하지 않았`, `unverified`, `unresolved`, `did not/haven't/not yet verify·check·test·run`. 동사와 부정 사이의 보조사(`확인하지는 않았`, `확인은 못 했`, `열어 보지도 않았`)도 같은 표현으로 본다
 - 사용자에게 확인 넘김: `확인해 보세요/보시면/보시고/볼 만/보면 좋`, `직접 확인하세요/하시면/하실 수 있`, `you can/may/should (want to) check·verify·confirm`, `worth checking`. 활용형 전체를 맞춰서 `직접 확인하실 필요는 없습니다` 같은 부정문은 판정하지 않는다
 
 줄과 Markdown은 다음처럼 처리한다.

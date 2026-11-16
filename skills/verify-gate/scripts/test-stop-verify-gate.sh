@@ -75,6 +75,10 @@ expect_block "backtick 라벨 미확인" '- **증상이 난 실기기의 iOS 버
 expect_block "보지 않은 활용형" "Ubuntu 부분은 아직 실제로 돌려 보지 않은 내용입니다."
 expect_block "보지 않은 것 섹션" $'**실행해 보지 않은 것**\n- iOS 실기기 화면'
 expect_block "아직 안 한 것 섹션" $'**아직 안 한 것**\n- Android 캡처'
+expect_block "조사가 낀 미확인" "manifest에서 직접 확인하지는 않았습니다."
+expect_block "조사가 낀 실행 안 함" "브라우저로 열어 보지는 않았습니다."
+expect_block "따옴표 밖 미확인" '"로그인" 화면은 확인하지 않았습니다.'
+expect_block "inline code 밖 미확인" '`deploy-prod.yml` 결과는 아직 확인하지 못했습니다.'
 
 expect_pass "명령과 blocker가 있는 unresolved" 'unresolved: `gh auth status` — 세션이 만료돼 로그인이 거부됨'
 expect_pass "승인 대기로 실패한 unresolved" 'unresolved: `gh auth status` — 아직 로그인 승인이 없어 인증이 거부됨'
@@ -84,6 +88,9 @@ expect_pass "code fence 안 인용" $'예시:\n```\n확인하지 않았습니다
 expect_pass "중첩 fence 안 인용" $'예시:\n````markdown\n```text\n확인하지 않았습니다.\n```\n````'
 expect_pass "다른 fence 문자는 닫지 않음" $'예시:\n~~~text\n```\n확인하지 않았습니다.\n~~~'
 expect_pass "Markdown 보고 속 코드 예시" $'```markdown\n테스트 통과.\n~~~text\n확인하지 않았습니다.\n~~~\n```'
+expect_pass "큰따옴표 안 인용" '"확인하지는 않았습니다"는 통과했고 "확인하지 않았습니다"는 차단됐습니다.'
+expect_pass "둥근 따옴표 안 인용" '“확인하지 않았습니다”라는 문장만 걸립니다.'
+expect_pass "inline code 안 인용" '`확인하지 않았습니다`가 패턴에 걸립니다.'
 expect_pass "평범한 완료 보고" "테스트 12개가 통과했습니다."
 expect_pass "남은 미확인 없음" "미확인 항목은 없습니다."
 expect_pass "영문 미확인 없음" "No unverified items remain."
