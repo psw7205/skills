@@ -42,7 +42,7 @@ git status --short
 
 - 파일이 이미 한국어를 쓰고 있지 않으면 ASCII 우선.
 - 스킬 디렉토리와 이름은 소문자 kebab-case. 예: `trace-change-why`.
-- frontmatter는 최소화: `name`, `description`, 필수 메타데이터만.
+- frontmatter는 최소화: `name`, `description`, 필수 메타데이터만. 수동 실행 스킬만 `disable-model-invocation: true`와 `agents/openai.yaml`(`policy.allow_implicit_invocation: false`)을 함께 둔다. 생애주기 판정은 `skills/skill-guide/SKILL.md`의 "생애주기 정하기"를 따른다.
 - 코드 블록은 용법이나 명령어를 명확히 할 때만 추가.
 
 ## 테스트 가이드라인

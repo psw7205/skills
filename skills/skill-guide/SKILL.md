@@ -42,6 +42,22 @@ description: >
 - 이 작업을 할 때 **매번 같은 설명을 반복**하고 있는가?
 - **실패한 적이 있는** 엣지케이스가 있는가? (→ Gotchas 섹션의 씨앗)
 
+## 생애주기 정하기
+
+전역 설치된 스킬의 description은 매 세션 스킬 목록에 실린다. 목록 예산(Claude Code 기준 컨텍스트의 약 1%)을 넘으면 description이 잘려 라우팅이 나빠지므로, 상주 비용을 낼 스킬만 상시로 둔다. 두 질문으로 정한다.
+
+1. 설치 뒤에도 설정·symlink·훅이 스킬 디렉토리를 참조하는가?
+2. 모델이 사용자 지시 없이 이 지식을 꺼내야 하는가? (증상으로 불리는 런북은 예)
+
+| 단계 | 조건 | 표시 | 예 |
+|------|------|------|----|
+| 상시 | 2가 예 | 없음(기본) | diff-review, mac-disk-reclaim |
+| 수동 | 1이 예이거나 반복 실행, 2는 아니오 | frontmatter `disable-model-invocation: true` + `agents/openai.yaml`의 `policy.allow_implicit_invocation: false` | setup-machine, setup-dotfiles, setup-remote-display |
+| 1회용 | 둘 다 아니오 | 본문에 실행 경로 명시, 설치 목록에서 제외 | setup-herdr |
+
+- 수동 스킬은 모델이 Skill 도구로 부를 수 없다. 다른 스킬이 위임할 때는 설치된 SKILL.md를 직접 읽게 쓴다.
+- 1회용 스킬은 `marketplace.json`에 남겨 `npx skills use psw7205/skills@<name>`로 실행할 수 있게 한다. `skills use`는 push된 버전을 읽고 로컬 경로 형식은 받지 않는다.
+
 ## 작성 체크리스트
 
 ### 1. Frontmatter

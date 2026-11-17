@@ -37,14 +37,16 @@
 
 ### 개발 환경
 
+`(수동)`은 모델이 자동 호출하지 않고 `/name`·`$name`으로만 실행하는 스킬, `(1회용)`은 설치하지 않고 `npx skills use psw7205/skills@<name>`이나 레포 파일로 실행하는 스킬이다.
+
 | 스킬 | 설명 | 트리거 예시 |
 |------|------|------------|
-| `setup-machine` | 머신 셋업·싱크·업데이트 반영 진입점. dotfiles·herdr 위임 + Claude Code·Codex 계층(글로벌 지침, output style, statusline, 셸 가드·Artifact 가드, verify-gate, 세션 로그)을 `sync.py`로 check→apply, 위치 보존 handler 마이그레이션, 머신별 끄기 기록 | "새 머신 셋업", "싱크 맞춰줘", "스킬 업데이트 반영해줘", "verify gate 꺼줘", "아티팩트 막아줘" |
-| `setup-dotfiles` | 셸·brew·mise 기준선 설치·대조 (번들 zshenv/zprofile/zshrc/Brewfile/mise, 머신 고유 값은 `.local` 분리) + `claude --resume`·`codex resume` Tab 세션 picker(resume-completion) 설치·갱신 | "dotfiles 설치", "Brewfile 적용", "dotfiles 대조", "resume 자동완성 설치" |
+| `setup-machine` | (수동) 머신 셋업·싱크·업데이트 반영 진입점. dotfiles·herdr 위임 + Claude Code·Codex 계층(글로벌 지침, output style, statusline, 셸 가드·Artifact 가드, verify-gate, 세션 로그)을 `sync.py`로 check→apply, 위치 보존 handler 마이그레이션, 머신별 끄기 기록 | "새 머신 셋업", "싱크 맞춰줘", "스킬 업데이트 반영해줘", "verify gate 꺼줘", "아티팩트 막아줘" |
+| `setup-dotfiles` | (수동) 셸·brew·mise 기준선 설치·대조 (번들 zshenv/zprofile/zshrc/Brewfile/mise, 머신 고유 값은 `.local` 분리) + `claude --resume`·`codex resume` Tab 세션 picker(resume-completion) 설치·갱신 | "dotfiles 설치", "Brewfile 적용", "dotfiles 대조", "resume 자동완성 설치" |
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | "cmux 사용법", "cmux 설정", "cmux 브라우저", "cmux sidebar" |
-| `setup-herdr` | herdr TUI 전용. `config.toml`을 다른 머신으로 이식·검증 (OS별 경로, byte-exact 전송, `config check` 3단 진단, remote attach 키 소유권) | "herdr 설정 이식", "윈도우에 herdr 설정 적용", "herdr prefix 바꿔줘", "herdr 단축키 안 먹어" |
-| `setup-remote-display` | macOS 화면 공유를 서드파티 VNC 뷰어로 쓸 때 BetterDisplay 가상 화면 + 미러링으로 framebuffer를 하나로 줄이는 CLI·Raycast 명령 설치, VNC 5900을 Tailscale 대역으로만 제한하는 pf anchor | "TigerVNC로 맥 접속", "VNC 듀얼 모니터 문제", "원격 디스플레이 켜줘", "VNC tailscale만 허용" |
+| `setup-herdr` | (1회용) herdr TUI 전용. `config.toml`을 다른 머신으로 이식·검증 (OS별 경로, byte-exact 전송, `config check` 3단 진단, remote attach 키 소유권) | "herdr 설정 이식", "윈도우에 herdr 설정 적용", "herdr prefix 바꿔줘", "herdr 단축키 안 먹어" |
+| `setup-remote-display` | (수동) macOS 화면 공유를 서드파티 VNC 뷰어로 쓸 때 BetterDisplay 가상 화면 + 미러링으로 framebuffer를 하나로 줄이는 CLI·Raycast 명령 설치, VNC 5900을 Tailscale 대역으로만 제한하는 pf anchor | "TigerVNC로 맥 접속", "VNC 듀얼 모니터 문제", "원격 디스플레이 켜줘", "VNC tailscale만 허용" |
 | `repo-mirror` | 여러 repo 작업 트리를 외장 볼륨·다른 Mac·Linux/WSL로 병렬 rsync 복사 (`.git` 보존, 산출물 제외, Linux 대상 NFD→NFC, openrsync vs rsync 3.x 선택) | "repo 백업", "WSL로 레포 복사", "한글 파일명 깨져", "mirror repositories to linux" |
 | `tailnet-server-hardening` | 클라우드 VM 관리 경로를 Tailscale로 옮기고 공개 SSH를 닫는 순서·검증(키 만료, sshd 실효값, 2중 방화벽, CDN 대역 제한, 비상 경로) + 바깥·서버 안·OCI control plane 3지점 read-only 점검 스크립트 | "서버 SSH 포트 닫기", "tailscale로만 서버 접속", "서버 헬스체크", "node key expired" |
 | `mac-disk-reclaim` | macOS 개발 머신 디스크 회수 — read-only 실측 스크립트, 재생성 비용 기준 A/B/C 등급, 되살릴 수 없는 데이터는 사본 체크섬 검증 후 삭제, VM 디스크 fstrim | "디스크 용량 확보", "맥 용량 줄이기", "Docker 용량 줄이기", "free up disk space on mac" |

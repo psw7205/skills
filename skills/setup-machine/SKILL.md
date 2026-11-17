@@ -10,6 +10,7 @@ description: >
   "미확인 보고 차단", "세션 로그 훅 설치", "세션 자동 기록", "세션 로그 제거", "statusline 설치", "상태바 설치",
   "output style 설치", "한국어 output style", "답변이 영어로 나와",
   "setup this machine", "sync agent config", "install hooks", "install verify gate", "install statusline" 등에서 트리거.
+disable-model-invocation: true
 ---
 
 # setup-machine
@@ -22,7 +23,7 @@ description: >
 |------|------|
 | 셸·패키지·툴체인, resume completion | `setup-dotfiles` |
 | 에이전트 계층 | 이 스킬의 `scripts/sync.py` |
-| herdr 설정 | `setup-herdr` |
+| herdr 설정 | `setup-herdr` (1회용, 설치하지 않는다) |
 
 에이전트 계층 컴포넌트:
 
@@ -40,16 +41,16 @@ description: >
 
 ## 절차
 
-1. **스킬 확보·갱신.** `npx skills add <source> -g --skill setup-machine setup-dotfiles setup-herdr -y`. `<source>`는 이 레포의 로컬 경로 또는 `psw7205/skills`다. 업데이트 반영도 같은 명령이다.
+1. **스킬 확보·갱신.** `npx skills add <source> -g --skill setup-machine setup-dotfiles -y`. `<source>`는 이 레포의 로컬 경로 또는 `psw7205/skills`다. 업데이트 반영도 같은 명령이다.
 2. **프로파일.** `uname -s`와 `command -v python3 jq herdr codex claude`로 감지한다. 대화형 머신 여부는 감지할 수 없다. `~/.agents/setup-machine/profile.json`에 `interactive`가 없을 때만 사용자에게 묻고 `python3 <S>/sync.py profile --interactive true|false`로 기록한다.
-3. **dotfiles.** `setup-dotfiles`를 대조 모드로 먼저 돌린다. 새 머신이거나 사용자가 원할 때만 적용한다. 도구가 새로 설치됐으면 2의 감지를 다시 한다.
+3. **dotfiles.** `~/.agents/skills/setup-dotfiles/SKILL.md`를 읽고 대조 모드로 먼저 돌린다. 새 머신이거나 사용자가 원할 때만 적용한다. 도구가 새로 설치됐으면 2의 감지를 다시 한다.
 4. **에이전트 계층.**
    - `python3 <S>/sync.py check`로 상태를 보이고 `python3 <S>/sync.py apply`를 실행한다.
    - `user-modified` 항목은 대상 파일과 canonical의 diff(설정 값이면 현재 값)를 보이고, 사용자가 승인한 것만 `apply --overwrite <id,...>`로 덮어쓴다.
    - `needs-review`는 Codex가 바뀐 훅의 신뢰를 요구하는 상태다. 사용자가 새 Codex 세션에서 `/hooks`로 승인한 뒤 `check`를 다시 돌린다.
    - `blocked`는 사유(도구 부재, Codex `hooks` 기능)를 그대로 보고한다. 설치 완료로 말하지 않는다.
-5. **herdr.** `herdr`가 있고 대화형 머신이면 `setup-herdr`에 위임한다.
-6. **옛 스킬 정리.** `rg -n 'skills/(setup-hooks|verify-gate|session-log)/' ~/.claude/settings.json "${CODEX_HOME:-$HOME/.codex}/hooks.json"`가 빈 출력일 때만(`blocked` 컴포넌트는 옛 등록을 옮기지 않고 detail에 "옛 경로 등록 남음"을 적는다) `npx skills remove -g setup-hooks verify-gate session-log statusline setup-output-style setup-global-config resume-completion -y`. `~/.agents/.skill-lock.json`에 없는 이름은 뺀다. 순서를 뒤집으면 등록된 Stop 훅이 없는 파일을 가리켜 매 응답마다 에러가 난다.
+5. **herdr.** `herdr`가 있고 대화형 머신이면 `setup-herdr` 절차를 따른다. 이 레포가 있으면 `skills/setup-herdr/SKILL.md`를 읽고, 없으면 `npx skills use psw7205/skills@setup-herdr` 출력을 쓴다.
+6. **옛 스킬 정리.** `rg -n 'skills/(setup-hooks|verify-gate|session-log)/' ~/.claude/settings.json "${CODEX_HOME:-$HOME/.codex}/hooks.json"`가 빈 출력일 때만(`blocked` 컴포넌트는 옛 등록을 옮기지 않고 detail에 "옛 경로 등록 남음"을 적는다) `npx skills remove -g setup-hooks verify-gate session-log statusline setup-output-style setup-global-config resume-completion setup-herdr -y`. `~/.agents/.skill-lock.json`에 없는 이름은 뺀다. 순서를 뒤집으면 등록된 Stop 훅이 없는 파일을 가리켜 매 응답마다 에러가 난다.
 7. **리포트.** 컴포넌트×에이전트 상태, 백업 경로, 사용자 할 일을 낸다. 사용자 할 일은 새 Claude Code·Codex 세션, Codex `/hooks` 승인, herdr 재접속(remote attach는 시작 시점에 config를 읽는다)이다. `session-log`가 설치돼 있으면 기록 위치(`~/.agents/session-logs/`)와 끄는 방법(`remove --only session-log`)을 적는다.
 
 `<S>`는 설치된 이 스킬의 `scripts` 디렉토리다(`~/.agents/skills/setup-machine/scripts`).
@@ -90,6 +91,7 @@ sync.py profile --interactive true|false
 
 ## Gotchas
 
+- `setup-machine`·`setup-dotfiles`는 모델 자동 호출을 끈 수동 스킬이라(`disable-model-invocation`, `agents/openai.yaml`) Skill 도구로 서로를 부를 수 없다. 하위 절차는 설치된 SKILL.md를 직접 읽어 따른다.
 - 스킬은 `--agent` 없이 전역 설치한다. 파일은 `~/.agents/skills/`에 놓이고 `~/.claude/skills/`는 그쪽을 가리키는 symlink가 된다. 등록되는 command도 그 경로를 가리킨다.
 - `npx skills update`는 레포에서 사라진 스킬을 지울지 물을 수 있다. 갱신은 `add`로 한다.
 - 우리 handler는 command 안의 스크립트 파일명으로 식별한다. 그래서 `~/.claude/skills/setup-hooks/...`처럼 옛 경로로 등록된 handler도 제자리에서 새 경로로 바뀐다.

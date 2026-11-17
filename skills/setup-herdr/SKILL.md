@@ -14,6 +14,8 @@ description: >
 
 이미 완성된 herdr `config.toml`을 다른 머신으로 옮기고, 대상 버전·플랫폼에서 전 키가 실제로 수락됐는지 확인한다.
 
+설치하지 않고 쓰는 1회용 스킬이다. 실행 후 남는 파일이 없어서 상주할 이유가 없다. 이 레포가 있으면 `skills/setup-herdr/SKILL.md`를 읽고, 없으면 `npx skills use psw7205/skills@setup-herdr`로 받는다.
+
 herdr 사용법과 pane·workspace 제어는 이 스킬의 대상이 아니다. `herdr --skill`과 herdr.dev 문서가 담당한다.
 
 ## 원본과 대상 확정

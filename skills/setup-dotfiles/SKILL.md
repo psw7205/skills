@@ -10,6 +10,7 @@ description: >
   "resume 자동완성", "claude resume tab", "codex resume tab", "세션 picker 설치", "세션 자동완성 안 떠",
   "install dotfiles", "setup shell config", "apply Brewfile", "zsh startup files",
   "install resume completion" 등에서 트리거.
+disable-model-invocation: true
 ---
 
 # setup-dotfiles

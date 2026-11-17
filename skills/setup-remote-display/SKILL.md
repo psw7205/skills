@@ -10,6 +10,7 @@ description: >
   "5900 포트 막아줘", "remote display 설치",
   "mac vnc from windows", "vnc multiple monitors", "headless mac virtual display",
   "restrict vnc to tailscale" 등에서 트리거.
+disable-model-invocation: true
 ---
 
 # setup-remote-display
