@@ -48,7 +48,6 @@
         "./skills/tmux",
         "./skills/cmux-help",
         "./skills/setup-herdr",
-        "./skills/herdr-fork-sync",
         "./skills/setup-remote-display",
         "./skills/repo-mirror",
         "./skills/tailnet-server-hardening",

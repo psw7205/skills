@@ -1,9 +1,10 @@
 ---
 name: setup-herdr
 description: >
-  완성된 herdr `config.toml`을 다른 머신으로 이식하고 그 버전·플랫폼에서 실제 수락됐는지 검증하는 스킬.
-  OS별 config 경로, byte-exact 전송, `config check` 3단 진단, remote attach의 키 소유권,
-  플랫폼별 prefix 함정을 다룬다.
+  herdr TUI 전용. 완성된 herdr TUI `config.toml`(prefix·키맵·UI·theme)을 다른 머신으로 이식하고
+  그 버전·플랫폼에서 실제 수락됐는지 검증하는 스킬. OS별 config 경로, byte-exact 전송,
+  `config check` 3단 진단, remote attach의 키 소유권, 플랫폼별 prefix 함정을 다룬다.
+  sub-agent·백그라운드 작업·터미널 읽기/제어·mod·layout 등 herdr-core(`hc`) 작업에는 쓰지 않는다.
   "herdr 설정 이식", "herdr 설정 복사해줘", "herdr 새 머신에 셋업", "herdr prefix 바꿔줘",
   "윈도우에 herdr 설정 적용", "herdr 단축키 안 먹어", "herdr config check",
   "setup herdr", "port herdr config", "herdr prefix not working" 등에서 트리거.
