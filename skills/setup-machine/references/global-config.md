@@ -15,7 +15,7 @@ Tool-agnostic baseline shared byte-identically by Claude Code and Codex. It hold
 
 - Review verbs (`review`, `검토`, `확인`, `분석`, `감사`, `리뷰`) mean read-only inspect. Modification verbs (`수정`, `고쳐`, `해결`, `반영`, `구현`, `업데이트`, `정리`, `커밋`) mean execution. Without a modification request, deliver analysis or a plan and stop.
 - In a mixed request, inspect first, then mutate only the explicitly requested scope. A modification verb does not authorize unrelated fixes.
-- For multi-step state-changing work, define success criteria and write a short plan whose steps each end with `-> verify: <check>`.
+- For multi-step state-changing work, inspect first, then write the plan: the problem and its cause with file:line, success criteria, what is in and out of scope, and steps each ending with `-> verify: <command or observation> → <expected result>`. Cut narration, not these parts. A step that still needs investigating means the plan is premature; a verify that cannot fail ("코드 확인", "전부 통과") is not a verify.
 
 ## Inspection
 
