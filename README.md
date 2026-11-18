@@ -46,6 +46,7 @@
 | `tmux` | tmux를 통한 외부 프로세스 상호작용 (SSH, dev 서버, 에이전트, 빌드) | "서버 확인해줘", "dev 서버 로그 봐줘", "다른 터미널에서 실행" |
 | `cmux-help` | cmux CLI 가이드 (모델·함정 정적, 커맨드 카탈로그는 `cmux --help`/`cmux docs`로 위임) | "cmux 사용법", "cmux 설정", "cmux 브라우저", "cmux sidebar" |
 | `setup-herdr` | (1회용) herdr TUI 전용. `config.toml`을 다른 머신으로 이식·검증 (OS별 경로, byte-exact 전송, `config check` 3단 진단, remote attach 키 소유권) | "herdr 설정 이식", "윈도우에 herdr 설정 적용", "herdr prefix 바꿔줘", "herdr 단축키 안 먹어" |
+| `hc-agent-refresh` | (수동) Claude Code·Codex 업데이트 뒤 herdr-core(`hc`) 터미널의 유휴 구버전 세션을 같은 대화로 resume해 교체 (셸 루트는 제자리, 에이전트 루트는 재실행, 초기 프롬프트 제외, Codex는 `--no-daemon`, dry run 기본) | "claude 재시작", "codex 재시작", "에이전트 업데이트 반영" |
 | `setup-remote-display` | (수동) macOS 화면 공유를 서드파티 VNC 뷰어로 쓸 때 BetterDisplay 가상 화면 + 미러링으로 framebuffer를 하나로 줄이는 CLI·Raycast 명령 설치, VNC 5900을 Tailscale 대역으로만 제한하는 pf anchor | "TigerVNC로 맥 접속", "VNC 듀얼 모니터 문제", "원격 디스플레이 켜줘", "VNC tailscale만 허용" |
 | `repo-mirror` | 여러 repo 작업 트리를 외장 볼륨·다른 Mac·Linux/WSL로 병렬 rsync 복사 (`.git` 보존, 산출물 제외, Linux 대상 NFD→NFC, openrsync vs rsync 3.x 선택) | "repo 백업", "WSL로 레포 복사", "한글 파일명 깨져", "mirror repositories to linux" |
 | `tailnet-server-hardening` | 클라우드 VM 관리 경로를 Tailscale로 옮기고 공개 SSH를 닫는 순서·검증(키 만료, sshd 실효값, 2중 방화벽, CDN 대역 제한, 비상 경로) + 바깥·서버 안·OCI control plane 3지점 read-only 점검 스크립트 | "서버 SSH 포트 닫기", "tailscale로만 서버 접속", "서버 헬스체크", "node key expired" |
