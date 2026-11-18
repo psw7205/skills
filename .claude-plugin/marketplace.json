@@ -31,6 +31,7 @@
         "./skills/pstack-codex",
         "./skills/compound",
         "./skills/session-history",
+        "./skills/daily-work-report",
         "./skills/session-bridge",
         "./skills/session-cost-audit",
         "./skills/repo-prd-sync",

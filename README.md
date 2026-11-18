@@ -30,6 +30,7 @@
 | `pstack-codex` | pstack 원본 스킬의 Cursor 도구·모델·경로를 Codex로 매핑하고 모든 서브에이전트에 어댑터를 전달하는 실행 진입점 | "Codex에서 pstack", "poteto-mode로 작업", "use pstack in Codex" |
 | `compound` | 해결한 문제를 `docs/solutions/`에 frontmatter 붙은 검색 가능한 단위로 자산화 | "이 문제 자산화해줘", "solution 저장", "compound 이거" |
 | `session-history` | 세션 대화 내용을 요약하여 히스토리 파일로 저장 | "세션 정리해줘", "오늘은 여기까지", "마무리" |
+| `daily-work-report` | 하루치 Claude Code·Codex 대화(여러 머신)와 GitHub 커밋을 근거로 팀 일일 보고용 Markdown 작성. org·호스트·보고 DB는 로컬 설정 | "작업 일지", "재택근무 리포트", "오늘 한 일 정리" |
 | `session-bridge` | Claude Code/Codex CLI/OpenCode transcript를 session id로 찾아 handoff 요약 작성 | "claude 세션 이어서", "opencode session handoff" |
 | `session-cost-audit` | Claude Code transcript 토큰 집계 → 비용 방정식 항(요청/턴·컨텍스트·cache 재구축 원인·도구 출력·subagent 모델·effort)과 anti-pattern flag 보고 | "세션 비용 분석", "토큰 어디서 새", "캐시 미스 확인", "cost dashboard" |
 | `repo-prd-sync` | 구현 repo와 PRD/design repo 사이의 수동 pull-in/back-sync 가드레일 | "PRD 반영", "repo prd sync", "sync PRD with repo" |
