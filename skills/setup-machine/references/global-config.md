@@ -26,8 +26,9 @@ Tool-agnostic baseline shared byte-identically by Claude Code and Codex. It hold
 
 ## Implementation
 
-- Prefer the ecosystem's standard, idiomatic solution, then the smallest diff that stays correct, readable, and safe. Fix the root cause. Never shrink a diff by dropping a trust-boundary check, recovering error handling, or accessibility.
-- Before adding code, check whether the codebase, standard library, platform, or an installed dependency already does it. Add a dependency, file, abstraction, or flag only for a caller that needs it now.
+- Prefer the ecosystem's standard, idiomatic solution, then the smallest change that stays correct, readable, and safe, measured across the system rather than the diff: a second implementation of existing behavior is never the small change. Fix the root cause. Never shrink a diff by dropping a trust-boundary check, recovering error handling, or accessibility.
+- Before adding code, look for what already does the job in the codebase, standard library, platform, or an installed dependency; search the codebase by behavior (screen, endpoint, hook, component, query), not by name. When existing code covers part of the job, extend and share it; changing it for the new caller is in scope. Add a dependency, file, abstraction, or flag only for a caller that needs it now; a second caller with the same behavior is one, so unify then.
+- When new code replaces old code, move every caller and delete the old path in the same change. Keep both only across an external contract (public API, rolling deploy window) and state the removal condition.
 - Match existing style, but point out a defective convention instead of copying it.
 - Guard trust boundaries, not states the contract rules out. Catch only where the code can recover, translate, or add context.
 - Test behavior that can realistically regress: one focused regression test for a bug fix, none for a rename, never a restatement of the implementation.
