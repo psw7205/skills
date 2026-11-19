@@ -50,7 +50,7 @@ herdr config check
 
 적용은 로컬 서버라면 `herdr server reload-config`로 재시작 없이 끝난다. 응답의 `diagnostics`가 비어야 수락된 것이다. 시작 시점에만 읽는 항목은 재시작이 필요하다.
 
-## remote attach는 예외 — 키는 클라이언트가 소유한다
+## remote attach에서는 키를 클라이언트가 소유한다
 
 `herdr --remote <host>`는 로컬 herdr가 thin client로 붙는 구조이고, **키 처리는 기본이 로컬**이다. `--remote-keybindings local|server` CLI 플래그로만 바뀌며 대응하는 config 키는 없다.
 
@@ -75,7 +75,7 @@ herdr config check
 
 ## 선택: 사이드바에 작업 디렉토리 노출
 
-workspace label은 생성 시점 cwd로 굳고, 사이드바 행 토큰에 `cwd`가 없다. 경로를 띄우는 경로는 tab label을 디렉토리로 채우거나 `herdr pane report-metadata --token NAME=VALUE`로 커스텀 토큰을 주입하는 둘뿐이다.
+workspace label은 생성 시점 cwd로 굳고, 사이드바 행 토큰에 `cwd`가 없다. 사이드바에 경로를 띄우는 방법은 두 가지뿐이다. tab label을 디렉토리 이름으로 채우거나, `herdr pane report-metadata --token NAME=VALUE`로 커스텀 토큰을 주입한다.
 
 shell rc의 `chpwd` 훅에서 `herdr tab rename "$HERDR_TAB_ID" "$(basename "$PWD")"`를 호출하면 claude·codex·plain shell을 한 번에 덮고 `cd`·zoxide 이동까지 반영된다. 에이전트별 세션 훅보다 셸 레벨이 커버 범위가 넓다. config를 이식할 때 이 훅도 함께 옮긴다.
 
