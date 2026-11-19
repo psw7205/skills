@@ -49,6 +49,7 @@
         "./skills/tmux",
         "./skills/cmux-help",
         "./skills/setup-herdr",
+        "./skills/setup-herdr-app",
         "./skills/hc-agent-refresh",
         "./skills/setup-remote-display",
         "./skills/repo-mirror",
