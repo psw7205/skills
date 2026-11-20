@@ -9,12 +9,12 @@ Tool-agnostic baseline shared byte-identically by Claude Code and Codex. It hold
 - Return raw or copyable Markdown inside a fenced `markdown` block.
 - Do not stack structured-choice prompts. Compress the real fork into one decision in prose, and pick among same-pattern candidates yourself with a one-line rationale.
 - Type non-ASCII text as UTF-8, never as hand-written `\uXXXX` escapes; a miscomputed code point renders as a different character.
-- Size the completion report to the change: what changed, how it was verified, caveats or failures. Explain at length only design decisions, tradeoffs, and unexpected findings.
+- Make the completion report understandable on its own. Cover the result, how you verified it, and any material limitations. Size the detail to the change.
 
 ## Execution Boundary
 
-- Review verbs (`review`, `검토`, `확인`, `분석`, `감사`, `리뷰`) mean read-only inspect. Modification verbs (`수정`, `고쳐`, `해결`, `반영`, `구현`, `업데이트`, `정리`, `커밋`) mean execution. Without a modification request, deliver analysis or a plan and stop.
-- In a mixed request, inspect first, then mutate only the explicitly requested scope. A modification verb does not authorize unrelated fixes.
+- Infer the requested outcome from the whole request. Review and planning requests authorize read-only work. In mixed requests, inspect first and make only the changes the user requested.
+- Within the authorized scope, complete routine steps and make reasonable, reversible assumptions. State assumptions that affect the result. Ask when a decision is reserved for the user, progress is blocked, or proceeding would materially expand scope or require authorization.
 - For multi-step state-changing work, inspect first, then write the plan: the problem and its cause with file:line, success criteria, what is in and out of scope, and steps each ending with `-> verify: <command or observation> → <expected result>`. Cut narration, not these parts. A step that still needs investigating means the plan is premature; a verify that cannot fail ("코드 확인", "전부 통과") is not a verify.
 
 ## Inspection
@@ -22,7 +22,7 @@ Tool-agnostic baseline shared byte-identically by Claude Code and Codex. It hold
 - Inspect read-only without confirmation. Do not ask for anything the workspace, git state, logs, config, runtime data, sibling repos, remotes, or CLIs can answer.
 - Before introducing an external identifier or running a project script, read its primary source: schema, config, controller, package exports, manifest, runtime versions.
 - For reviews and audits, inspect the full relevant range, not a sample, truncated tail, summary, or secondary claim. Cite evidence as file:line or the exact command.
-- Close every check that tools in reach can close before replying. Report an item as ``unresolved: `<command or call>` — <blocker>`` only after an attempt failed, where the blocker is missing access or credentials, irreversible, or user-only; an item never attempted is not unresolved.
+- Before replying, verify the requested outcome, deliverables, and format. Complete every relevant check available within the authorized scope. Report an item as ``unresolved: `<command or call>` — <blocker>`` only after an attempt failed, where the blocker is missing access or credentials, irreversible, or user-only; an item never attempted is not unresolved.
 
 ## Implementation
 
@@ -34,7 +34,7 @@ Tool-agnostic baseline shared byte-identically by Claude Code and Codex. It hold
 - Test behavior that can realistically regress: one focused regression test for a bug fix, none for a rename, never a restatement of the implementation.
 - Default to no comments. Write one only for what the reader cannot reconstruct from the code: a wire or storage contract, a platform trap, or why a plausible alternative was rejected. Never narrate the change.
 - Delete commented-out code and disabled tests instead of parking them.
-- Before reporting done, reread only the added hunks and remove restating comments, single-use wrappers, impossible-state guards, and mirror tests.
+- For the final simplicity pass, reread the added hunks and remove restating comments, unnecessary single-use wrappers, impossible-state guards, and mirror tests.
 - Let `uv` own Python packages and `mise` own language and tool versions; no `pip install` or ad-hoc global installers.
 - Do not hide problems with `as any`, skipped tests, `--no-verify`, dependency overrides, or ignore comments unless the diff or commit body states the tradeoff.
 - When an owned dependency fails and its source is available, trace it upstream instead of piling up a downstream workaround; report the boundary before mutating a repo outside scope.
