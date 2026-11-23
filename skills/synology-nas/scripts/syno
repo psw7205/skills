@@ -1,0 +1,306 @@
+#!/usr/bin/env -S python3 -I
+"""Synology DSM File Station CLI.
+
+Config: ~/.config/synology/nas.env (SYNO_URL, SYNO_USER, SYNO_PASS)
+Pinned cert: ~/.config/synology/cert.sha256 (written on first connect)
+Session cache: ~/.cache/synology/session.json
+"""
+import argparse
+import hashlib
+import http.client
+import json
+import os
+import re
+import ssl
+import sys
+import time
+import urllib.parse
+from pathlib import Path
+
+CONF_DIR = Path.home() / ".config/synology"
+ENV_FILE = CONF_DIR / "nas.env"
+PIN_FILE = CONF_DIR / "cert.sha256"
+SESSION_FILE = Path.home() / ".cache/synology/session.json"
+SESSION_NAME = "FileStation"
+RELOGIN_CODES = {106, 107, 119}
+
+ERRORS = {
+    100: "알 수 없는 에러", 101: "api/method/version 누락", 102: "존재하지 않는 API",
+    103: "존재하지 않는 method", 104: "지원하지 않는 version", 105: "세션 권한 없음",
+    106: "세션 타임아웃", 107: "중복 로그인으로 세션 끊김", 114: "파라미터 누락",
+    119: "잘못된 세션", 150: "요청 IP가 로그인 IP와 다름",
+    408: "파일/폴더 없음", 407: "권한 없음",
+}
+AUTH_ERRORS = {
+    400: "계정 없음 또는 비밀번호 틀림", 401: "비활성 계정", 402: "권한 거부",
+    403: "2FA 코드 필요", 404: "2FA 코드 인증 실패", 406: "2FA 강제 적용 계정",
+    407: "IP 차단됨 (DSM 제어판 > 보안 > 계정 > 자동 차단)",
+    409: "비밀번호 만료", 410: "비밀번호 변경 필요",
+}
+
+
+class ApiError(Exception):
+    def __init__(self, code, auth=False, detail=None):
+        self.code = code
+        msg = (AUTH_ERRORS if auth else ERRORS).get(code, "")
+        super().__init__(f"error {code}: {msg}" + (f" {detail}" if detail else ""))
+
+
+def load_env():
+    env = {}
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+            k, sep, v = line.partition("=")
+            if sep and not k.lstrip().startswith("#"):
+                env[k.strip()] = v
+    for k in ("SYNO_URL", "SYNO_USER", "SYNO_PASS"):
+        if os.environ.get(k):
+            env[k] = os.environ[k]
+    missing = [k for k in ("SYNO_URL", "SYNO_USER", "SYNO_PASS") if not env.get(k)]
+    if missing:
+        sys.exit(f"{ENV_FILE}에 {', '.join(missing)} 없음")
+    return env
+
+
+def write_private(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(text)
+
+
+class Nas:
+    def __init__(self, env):
+        self.env = env
+        u = urllib.parse.urlsplit(env["SYNO_URL"])
+        self.https = u.scheme == "https"
+        self.host = u.hostname
+        self.port = u.port or (5001 if self.https else 5000)
+        self.info = {}
+        self.sess = json.loads(SESSION_FILE.read_text()) if SESSION_FILE.exists() else None
+
+    def _conn(self):
+        if not self.https:
+            return http.client.HTTPConnection(self.host, self.port, timeout=60)
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE  # DSM self-signed cert; verified by pinned fingerprint below
+        conn = http.client.HTTPSConnection(self.host, self.port, timeout=60, context=ctx)
+        conn.connect()
+        fp = hashlib.sha256(conn.sock.getpeercert(binary_form=True)).hexdigest()
+        if not PIN_FILE.exists():
+            write_private(PIN_FILE, fp + "\n")
+            print(f"인증서 지문 고정: {fp}", file=sys.stderr)
+        elif fp != PIN_FILE.read_text().strip():
+            conn.close()
+            sys.exit(f"인증서 지문 불일치: {fp}. NAS 인증서를 바꿨다면 {PIN_FILE} 삭제 후 재시도")
+        return conn
+
+    def _post(self, path, params, authed=False):
+        headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        if authed:
+            # DSM ignores SynoToken in a POST body (error 119); it must travel as this header.
+            params = {**params, "_sid": self.sess["sid"]}
+            headers["X-SYNO-TOKEN"] = self.sess["synotoken"]
+        conn = self._conn()
+        conn.request("POST", f"/webapi/{path}", urllib.parse.urlencode(params), headers)
+        return conn, conn.getresponse()
+
+    def raw(self, params, path="entry.cgi", authed=False):
+        conn, resp = self._post(path, params, authed)
+        try:
+            data = resp.read()
+        finally:
+            conn.close()
+        try:
+            return json.loads(data)
+        except ValueError:
+            sys.exit(f"JSON이 아닌 응답 (HTTP {resp.status}): {data[:200]!r}")
+
+    def api(self, name):
+        if name not in self.info:
+            d = self.raw({"api": "SYNO.API.Info", "version": 1, "method": "query", "query": name})
+            if name not in d.get("data", {}):
+                raise ApiError(102, detail=name)
+            self.info[name] = d["data"][name]
+        return self.info[name]
+
+    def login(self):
+        d = self.raw({"api": "SYNO.API.Auth", "version": 6, "method": "login",
+                      "account": self.env["SYNO_USER"], "passwd": self.env["SYNO_PASS"],
+                      "session": SESSION_NAME, "format": "sid", "enable_syno_token": "yes"})
+        if not d.get("success"):
+            raise ApiError(d.get("error", {}).get("code"), auth=True)
+        self.sess = {"sid": d["data"]["sid"], "synotoken": d["data"].get("synotoken", "")}
+        write_private(SESSION_FILE, json.dumps(self.sess))
+
+    def logout(self):
+        if self.sess:
+            self.raw({"api": "SYNO.API.Auth", "version": 6, "method": "logout",
+                      "session": SESSION_NAME, "_sid": self.sess["sid"]})
+        SESSION_FILE.unlink(missing_ok=True)
+        self.sess = None
+
+    def _request(self, api, method, version, params):
+        info = self.api(api)
+        if info.get("requestFormat") == "JSON":
+            params = {k: v if _is_json(v) else json.dumps(v, ensure_ascii=False) for k, v in params.items()}
+        req = {"api": api, "method": method, "version": version or info["maxVersion"], **params}
+        if api == "SYNO.API.Info":
+            return info["path"], req
+        if not self.sess:
+            self.login()
+        return info["path"], req
+
+    def call(self, api, method, version=None, **params):
+        path, req = self._request(api, method, version, params)
+        if api == "SYNO.API.Info":
+            return self.raw(req, path)
+        d = self.raw(req, path, authed=True)
+        if not d.get("success") and d.get("error", {}).get("code") in RELOGIN_CODES:
+            self.login()
+            d = self.raw(req, path, authed=True)
+        if not d.get("success"):
+            err = d.get("error", {})
+            raise ApiError(err.get("code"), detail=json.dumps(err.get("errors", ""), ensure_ascii=False) or None)
+        return d.get("data", {})
+
+    def download(self, remote, dest: Path):
+        path, req = self._request("SYNO.FileStation.Download", "download", 2,
+                                  {"path": remote, "mode": "download"})
+        for attempt in range(2):
+            conn, resp = self._post(path, req, authed=True)
+            try:
+                if "json" in (resp.getheader("Content-Type") or ""):
+                    d = json.loads(resp.read())
+                    code = d.get("error", {}).get("code")
+                    if code in RELOGIN_CODES and not attempt:
+                        self.login()
+                        continue
+                    raise ApiError(code, detail=remote)
+                if resp.status != 200:
+                    raise ApiError(None, detail=f"HTTP {resp.status} {remote}")
+                tmp = dest.with_name(dest.name + ".part")
+                with open(tmp, "wb") as f:
+                    while chunk := resp.read(1 << 20):
+                        f.write(chunk)
+                tmp.replace(dest)
+                return dest
+            finally:
+                conn.close()
+
+    def find(self, folders, pattern, extension=None, limit=500):
+        start = {"folder_path": folders, "pattern": pattern}
+        if extension:
+            start["extension"] = extension
+        taskid = self.call("SYNO.FileStation.Search", "start", 2, **start)["taskid"]
+        try:
+            deadline = time.time() + 120
+            while True:
+                d = self.call("SYNO.FileStation.Search", "list", 2, taskid=taskid, offset=0, limit=limit,
+                              additional=["size", "time"])
+                if d.get("finished") or time.time() > deadline:
+                    return d.get("files", []), d.get("finished", False)
+                time.sleep(1)
+        finally:
+            self.call("SYNO.FileStation.Search", "stop", 2, taskid=taskid)
+            self.call("SYNO.FileStation.Search", "clean", 2, taskid=taskid)
+
+    def shares(self):
+        return [s["path"] for s in self.call("SYNO.FileStation.List", "list_share", 2)["shares"]]
+
+
+def _is_json(v):
+    if not isinstance(v, str):
+        return False
+    try:
+        json.loads(v)
+        return True
+    except ValueError:
+        return False
+
+
+def _fmt_size(n):
+    for unit in ("B", "K", "M", "G", "T"):
+        if n < 1024 or unit == "T":
+            return f"{n:.0f}{unit}" if unit == "B" else f"{n:.1f}{unit}"
+        n /= 1024
+
+
+def _print_files(files):
+    for f in files:
+        add = f.get("additional", {})
+        mtime = time.strftime("%Y-%m-%d %H:%M", time.localtime(add.get("time", {}).get("mtime", 0)))
+        size = "-" if f["isdir"] else _fmt_size(add.get("size", 0))
+        print(f"{'d' if f['isdir'] else '-'} {size:>8}  {mtime}  {f['path']}")
+
+
+def main():
+    p = argparse.ArgumentParser(prog="syno", description="Synology NAS(File Station) 파일 조회/검색/다운로드")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("login", help="로그인 확인 (다른 명령은 필요할 때 자동 로그인)")
+    sub.add_parser("logout", help="세션 종료")
+    ls = sub.add_parser("ls", help="공유 폴더 목록, 또는 폴더 내용")
+    ls.add_argument("path", nargs="?", help="예: /homes/<user>/문서")
+    fd = sub.add_parser("find", help="파일 이름으로 검색 (대소문자 무시, 부분 일치)")
+    fd.add_argument("pattern", help="예: 계약서  또는  '*.pdf'")
+    fd.add_argument("folders", nargs="*", help="검색 범위 (생략 시 모든 공유 폴더)")
+    fd.add_argument("-e", "--ext", help="확장자 필터, 예: pdf,docx")
+    gt = sub.add_parser("get", help="파일 다운로드 (폴더나 여러 개면 zip)")
+    gt.add_argument("paths", nargs="+", help="NAS 경로")
+    gt.add_argument("-o", "--out", default=".", help="저장 디렉터리 또는 파일 경로 (기본: 현재 디렉터리)")
+    c = sub.add_parser("call", help="임의 Web API 호출 (JSON 출력)")
+    c.add_argument("api")
+    c.add_argument("method")
+    c.add_argument("params", nargs="*", help="key=value")
+    c.add_argument("-v", "--version", type=int)
+    a = p.parse_args()
+
+    nas = Nas(load_env())
+    try:
+        if a.cmd == "login":
+            nas.login()
+            print("로그인 성공")
+        elif a.cmd == "logout":
+            nas.logout()
+            print("로그아웃")
+        elif a.cmd == "ls":
+            if a.path:
+                _print_files(nas.call("SYNO.FileStation.List", "list", 2, folder_path=a.path,
+                                      additional=["size", "time"])["files"])
+            else:
+                print("\n".join(nas.shares()))
+        elif a.cmd == "find":
+            files, finished = nas.find(a.folders or nas.shares(), a.pattern, a.ext)
+            _print_files(files)
+            if not finished:
+                print("(검색 시간 초과: 일부 결과만 표시)", file=sys.stderr)
+        elif a.cmd == "get":
+            out = Path(a.out).expanduser()
+            remote = a.paths[0] if len(a.paths) == 1 else a.paths
+            infos = nas.call("SYNO.FileStation.List", "getinfo", 2, path=a.paths)["files"]
+            for f in infos:
+                if "code" in f:
+                    raise ApiError(f["code"], detail=f.get("path"))
+            if out.is_dir():
+                name = Path(a.paths[0]).name if len(a.paths) == 1 else "download"
+                if len(a.paths) > 1 or infos[0]["isdir"]:
+                    name += ".zip"
+                out = out / re.sub(r'[\\/:*?"<>|]', "_", name)
+            print(nas.download(remote, out))
+        elif a.cmd == "call":
+            params = {}
+            for it in a.params:
+                k, sep, v = it.partition("=")
+                if not sep:
+                    sys.exit(f"key=value 형식이 아님: {it}")
+                params[k] = v
+            print(json.dumps(nas.call(a.api, a.method, a.version, **params), ensure_ascii=False, indent=2))
+    except ApiError as e:
+        sys.exit(str(e))
+    except OSError as e:
+        sys.exit(f"연결 실패: {e}")
+
+
+if __name__ == "__main__":
+    main()

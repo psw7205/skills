@@ -79,6 +79,7 @@
 |------|------|------------|
 | `video-subtitle-dl` | 영상 URL에서 자막 추출, 번역, 포맷 변환 (yt-dlp 기반) | "자막 다운로드", "CC 스크립트 추출", "이 영상 자막 한국어로" |
 | `ncloud-docs` | NCP 공식 문서를 llms.txt 인덱스·원문 `.md`로 수집 (slug 검색, 상품 단위 pull 후 grep으로 부재 판정, WAF UA 차단·SPA 셸·WebFetch 요약 함정 회피) | "ncloud 문서 확인해", "NCP API 스펙", "네이버 클라우드 가이드" |
+| `synology-nas` | Synology NAS(DSM File Station) 파일 목록·검색·다운로드 번들 CLI (`nas.env` 접속 정보, 세션 캐시·자동 재로그인, 자체 서명 인증서 지문 고정) | "NAS에서 견적서 받아줘", "NAS 파일 찾아줘", "시놀로지에서 가져와" |
 
 ## 설치
 

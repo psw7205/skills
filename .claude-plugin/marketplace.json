@@ -89,7 +89,8 @@
       "strict": false,
       "skills": [
         "./skills/video-subtitle-dl",
-        "./skills/ncloud-docs"
+        "./skills/ncloud-docs",
+        "./skills/synology-nas"
       ]
     }
   ]
