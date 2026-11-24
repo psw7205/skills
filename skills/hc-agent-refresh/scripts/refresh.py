@@ -18,11 +18,13 @@ AGENTS = {
         "bin": "claude", "exit": "/exit", "extra": [],
         "drop": {"-c", "--continue", "-r", "--resume", "--session-id", "--fork-session",
                  "--from-pr", "-p", "--print"},
+        "history": ("~/.claude/projects", "{}.jsonl"),
     },
     "codex": {
         # hc runs Codex only with --no-daemon; otherwise its commands run outside hc.
         "bin": "codex", "exit": "/quit", "extra": ["--no-daemon"],
         "drop": {"--last", "--all", "--include-non-interactive"},
+        "history": ("~/.codex/sessions", "rollout-*-{}.jsonl"),
     },
 }
 
@@ -108,6 +110,13 @@ def running_session(agent, machine, pid):
     return version(m.group(1)), None
 
 
+def has_conversation(machine, spec, sid):
+    # Both agents write the session file at the first message; resuming a session without one fails.
+    root, name = spec["history"]
+    found = sh(machine, f"if [ -d {root} ]; then find {root} -name '{name.format(sid)}' -print -quit; fi")
+    return bool(found.strip())
+
+
 def wait_exit(addr, pid, root_is_shell):
     deadline = time.time() + 30
     while time.time() < deadline:
@@ -174,12 +183,16 @@ def main():
         from_daemon = agent == "codex" and "--no-daemon" not in fg["argv"]
         flags = relaunch_flags(fg["argv"], arity, spec["drop"])
         flags += [f for f in spec["extra"] if f not in flags]
+        fresh = sid is not None and not has_conversation(machine, spec, sid)
 
-        def command(session_id):
-            resume = ["--resume", session_id] if agent == "claude-code" else ["resume", session_id]
+        def command(resume_id):
+            if resume_id is None:
+                return [spec["bin"], *flags]
+            resume = ["--resume", resume_id] if agent == "claude-code" else ["resume", resume_id]
             return [spec["bin"], *resume, *flags]
 
-        print(f"{label}  {'in-place' if root_is_shell else 'relaunch'}  {shlex.join(command(sid or '<id>'))}")
+        mode = ("in-place" if root_is_shell else "relaunch") + (", no conversation" if fresh else "")
+        print(f"{label}  {mode}  {shlex.join(command(None if fresh else sid or '<id>'))}")
         daemon_note = (f"{'':14} then: hc exec{' --on ' + machine if machine else ''} 'codex app-server daemon restart'"
                        f"; press r in {addr} (daemon holds the thread lock)")
         if from_daemon:
@@ -190,14 +203,16 @@ def main():
         type_raw(addr, spec["exit"])
         wait_exit(addr, fg["pid"], root_is_shell)
         if sid is None:
-            # Scrollback also holds conversation text; accept only the exit hint's UUID.
-            found = re.findall(r"To continue this session, run:\s+codex resume "
+            # Scrollback also holds conversation text; accept only the UUID of Codex's exit lines.
+            # Without a conversation it prints "Session ID:" and no resume hint.
+            found = re.findall(r"(?:To continue this session, run:\s+codex resume|^Session ID:) "
                                r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b",
-                               hc("read", addr, "--lines", "60"))
+                               hc("read", addr, "--lines", "60"), re.M)
             if not found:
-                raise SystemExit(f"{addr}: exited but printed no 'codex resume <id>'")
+                raise SystemExit(f"{addr}: exited but printed no session id")
             sid = found[-1]
-        cmd = command(sid)
+            fresh = not has_conversation(machine, spec, sid)
+        cmd = command(None if fresh else sid)
 
         if root_is_shell:
             # `command` skips shell aliases that would repeat flags already in argv
@@ -216,7 +231,7 @@ def main():
             except RuntimeError as e:
                 raise SystemExit(f"{e}\nold terminal is gone; recover with: hc {shlex.join(run + ['--', *cmd])}")
             print(f"{'':14} now {new.get('address')}")
-        print(f"{'':14} resumed {sid}")
+        print(f"{'':14} {'new session; ' + sid + ' had no conversation' if fresh else 'resumed ' + sid}")
 
     if not args.apply:
         print("dry run; pass --apply to restart")

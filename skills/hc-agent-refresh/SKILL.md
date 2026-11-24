@@ -24,13 +24,14 @@ python3 -I scripts/refresh.py --apply --force wsl-dev/t29          # 버전이 �
 | | Claude Code | Codex |
 |---|---|---|
 | 실행 중 버전 | `~/.claude/sessions/<pid>.json`의 `version` | 실행 파일 경로의 `releases/<version>` |
-| 세션 id | 같은 파일의 `sessionId` | 종료 화면의 `codex resume <id>` |
+| 세션 id | 같은 파일의 `sessionId` | 종료 화면의 `codex resume <id>` 또는 `Session ID: <id>` |
 | 종료 → 재개 | `/exit` → `claude --resume <id>` | `/quit` → `codex resume <id> --no-daemon` |
 
 ## 동작
 
 - 루트가 셸인 터미널(pane에서 직접 띄운 것): 종료 명령을 보낸 뒤 같은 셸에서 `command <bin> …`로 다시 띄운다. 주소와 pane 위치가 유지된다. `command`는 원래 argv에 이미 들어 있는 플래그를 alias가 한 번 더 붙이지 않게 한다.
 - 루트가 에이전트인 터미널(`hc run claude "…"`): 종료되면 rm하고, 같은 cwd·name·parent·keep·labels로 다시 띄운다. 주소는 바뀐다.
+- 대화가 없는 세션은 resume 대신 같은 플래그로 새 세션을 띄운다. 두 에이전트 모두 첫 메시지 때 대화 파일을 만들기 때문이다. Claude는 `~/.claude/projects/*/<id>.jsonl`, Codex는 `~/.codex/sessions/**/rollout-*-<id>.jsonl`이 없으면 대화가 없는 것으로 본다. 대화가 없는 Codex는 종료 화면에 `codex resume <id>` 대신 `Session ID: <id>`만 남긴다.
 - 원래 argv에서 플래그만 남긴다. 초기 프롬프트 인자와 resume·continue·print 계열은 뺀다. 그래서 같은 작업이 다시 전송되지 않는다. 값을 받는 플래그는 그 머신의 `<bin> --help`에서 판별한다.
 - Codex에는 `--no-daemon`을 붙인다. daemon 모드에서는 명령이 hc 밖에서 실행되기 때문이다.
 
