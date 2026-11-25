@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Install this skill's Herdr app mods and their layout into the Herdr home.
+"""Install this skill's Herdr app mods, their layout and keys into the Herdr home.
 
 check (default): report drift, exit 1 if any. apply: copy mods, clone the layout
-when missing, insert each mod's block, then `herdr-app check` every mod. Stdlib only.
+when missing, insert each mod's block, set this skill's keys in keys.json (after a
+backup), then `herdr-app check` every mod. Stdlib only.
 """
 import argparse
 import filecmp
@@ -11,6 +12,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "mods"
@@ -23,6 +25,8 @@ BLOCKS = {
                       "node": {"id": "quick-prompts", "type": "block", "size": {"px": 34},
                                "content": {"mod": "quick-prompts"}}},
 }
+# Bindings this skill owns. keys.json is the person's file: every other binding stays.
+KEYS = {"global": {"cmd-w": "mod.open:close-guard"}}
 
 
 def mod_drift():
@@ -66,6 +70,11 @@ def insert_blocks(tree):
         parent["children"].insert(at, spec["node"])
 
 
+def key_drift(keys):
+    return [(section, key, action) for section, binds in KEYS.items()
+            for key, action in binds.items() if keys.get(section, {}).get(key) != action]
+
+
 def herdr(*args):
     return subprocess.run(["herdr-app", *args], capture_output=True, text=True)
 
@@ -85,7 +94,15 @@ def main():
     else:
         for name in missing_blocks(tree):
             print(f"layout block missing  {name} in {lp}")
-    clean = not drift and tree is not None and not missing_blocks(tree)
+    kp = HOME / "keys.json"
+    if not kp.exists():
+        # A partial keys.json would replace Herdr's defaults, so only edit the one Herdr wrote.
+        raise SystemExit(f"{kp} missing: open Herdr once so it writes its keys")
+    keys = json.loads(kp.read_text())
+    kdrift = key_drift(keys)
+    for section, key, action in kdrift:
+        print(f"key   {section} {key} -> {action} (now {keys.get(section, {}).get(key)})")
+    clean = not drift and tree is not None and not missing_blocks(tree) and not kdrift
     if args.mode == "check":
         print("in sync" if clean else "drift; run with apply")
         sys.exit(0 if clean else 1)
@@ -102,6 +119,11 @@ def main():
     if missing_blocks(tree):
         insert_blocks(tree)
         lp.write_text(json.dumps(tree, ensure_ascii=False, indent=2) + "\n")
+    if kdrift:
+        shutil.copyfile(kp, kp.with_name(f"keys.json.bak-{time.strftime('%Y%m%d-%H%M%S')}"))
+        for section, key, action in kdrift:
+            keys.setdefault(section, {})[key] = action
+        kp.write_text(json.dumps(keys, indent=2) + "\n")
 
     failed = False
     for mod in sorted(p for p in SRC.iterdir() if p.is_dir()):
