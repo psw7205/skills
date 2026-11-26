@@ -24,9 +24,14 @@ BLOCKS = {
     "quick-prompts": {"parent": "work", "before": "status",
                       "node": {"id": "quick-prompts", "type": "block", "size": {"px": 34},
                                "content": {"mod": "quick-prompts"}}},
+    "pane-edge": {"parent": "work", "before": "status",
+                  "node": {"id": "pane-edge", "type": "block", "size": {"px": 0},
+                           "content": {"mod": "pane-edge"}}},
 }
 # Bindings this skill owns. keys.json is the person's file: every other binding stays.
-KEYS = {"global": {"cmd-w": "mod.open:close-guard"}}
+KEYS = {"global": {"cmd-w": "mod.open:close-guard"},
+        # pane-edge needs its block, which only this layout has; other layouts keep pane.go.
+        f"layout:{LAYOUT['name']}": {"cmd-alt-left": "pane-edge.left", "cmd-alt-right": "pane-edge.right"}}
 
 
 def mod_drift():
